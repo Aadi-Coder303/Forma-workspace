@@ -1,28 +1,73 @@
 @import "tailwindcss";
 
-:root {
-  /* Forma Color Palette */
-  --color-ink: #1A1A2E;
-  --color-mist: #F4F2EE;
-  --color-slate: #6B6F7A;
-  --color-ember: #C7622A;
-  --color-moss: #2E5E4E;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-ink: var(--color-ink);
-  --color-mist: var(--color-mist);
-  --color-slate: var(--color-slate);
-  --color-ember: var(--color-ember);
-  --color-moss: var(--color-moss);
+  --color-canvas: var(--bg-base); /* renamed from base to canvas to avoid text-base conflict */
+  --color-sidebar: var(--bg-sidebar);
+  --color-card: var(--bg-card);
+  --color-hover: var(--bg-hover);
+  --color-border: var(--border);
+  --color-primary: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-surface: var(--accent-surface);
   
+  --color-status-urgent: var(--status-urgent);
+  --color-status-urgent-bg: var(--status-urgent-bg);
+  --color-status-success: var(--status-success);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-normal: var(--status-normal);
+  --color-status-normal-bg: var(--status-normal-bg);
+
   --font-display: var(--font-playfair);
   --font-body: var(--font-lora);
 }
 
+@layer base {
+  :root {
+    --bg-base: #F7F6F3;
+    --bg-sidebar: #EFEDE9;
+    --bg-card: #FFFFFF;
+    --bg-hover: #E8E6E1;
+    --border: #E2E0DB;
+    --text-primary: #1C1C1C;
+    --text-muted: #8A8A8A;
+    --text-faint: #B5B3AE;
+    --accent: #1C1C1C;
+    --accent-surface: #EFEFED;
+
+    /* Semantic / Status Colors */
+    --status-urgent: #DC2626;
+    --status-urgent-bg: #FEF2F2;
+    --status-success: #16A34A;
+    --status-success-bg: #F0FDF4;
+    --status-warning: #D97706;
+    --status-warning-bg: #FFFBEB;
+    --status-normal: #8A8A8A;
+    --status-normal-bg: #F3F3F1;
+  }
+
+  .dark {
+    --bg-base: #141412;
+    --bg-sidebar: #1C1B19;
+    --bg-card: #222220;
+    --bg-hover: #2A2926;
+    --border: #2E2C29;
+    --text-primary: #F0EEE9;
+    --text-muted: #7A7974;
+    --text-faint: #4A4845;
+    --accent: #F0EEE9;
+    --accent-surface: #2A2926;
+  }
+}
+
 body {
-  background-color: var(--color-ink);
-  color: var(--color-mist);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   font-family: var(--font-body), serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -9,6 +9,9 @@ declare global {
       // Folder pickers
       pickFolder: () => Promise<string | null>;
       importProject: () => Promise<string | null>;
+      
+      // IPC Menu Events
+      onMenuAction: (callback: (action: string) => void) => void;
 
       // Projects
       createProject: (projectData: any) => Promise<string>;

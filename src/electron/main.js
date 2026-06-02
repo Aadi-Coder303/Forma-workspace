@@ -80,21 +80,37 @@ app.whenReady().then(() => {
   });
 
   const isMac = process.platform === 'darwin';
+  const sendAction = (action) => {
+    if (mainWindow) mainWindow.webContents.send('menu:action', action);
+  };
+
   const menuTemplate = [
     ...(isMac ? [{
       label: app.name,
       submenu: [
-        { role: 'about' },
+        { role: 'about', label: 'About Forma Workspace' },
+        { label: 'Check for Updates', click: () => autoUpdater.checkForUpdates() },
         { type: 'separator' },
-        { role: 'services' },
+        { label: 'Preferences', accelerator: 'CmdOrCtrl+,', click: () => sendAction('preferences') },
         { type: 'separator' },
-        { role: 'hide' },
+        { role: 'hide', label: 'Hide Forma Workspace' },
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
+        { role: 'quit', label: 'Quit Forma Workspace' }
       ]
     }] : []),
+    {
+      label: 'File',
+      submenu: [
+        { label: 'New Project', accelerator: 'CmdOrCtrl+N', click: () => sendAction('new-project') },
+        { label: 'Import Existing Project', accelerator: 'CmdOrCtrl+Shift+N', click: () => sendAction('import-project') },
+        { type: 'separator' },
+        { label: 'Export Project Data', accelerator: 'CmdOrCtrl+E', click: () => sendAction('export-project') },
+        { type: 'separator' },
+        { role: 'close', label: 'Close Window' }
+      ]
+    },
     {
       label: 'Edit',
       submenu: [
@@ -104,50 +120,57 @@ app.whenReady().then(() => {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
-        ...(isMac ? [
-          { role: 'pasteAndMatchStyle' },
-          { role: 'delete' },
-          { role: 'selectAll' },
-          { type: 'separator' },
-          { label: 'Speech', submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }] }
-        ] : [
-          { role: 'delete' },
-          { type: 'separator' },
-          { role: 'selectAll' }
-        ])
+        { role: 'selectAll' },
+        { type: 'separator' },
+        { label: 'Find', accelerator: 'CmdOrCtrl+F', click: () => sendAction('find') }
       ]
     },
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+Shift+S', click: () => sendAction('toggle-sidebar') },
+        { label: 'Collapse Sidebar to Icons', accelerator: 'CmdOrCtrl+Shift+[', click: () => sendAction('collapse-sidebar') },
         { type: 'separator' },
-        { role: 'resetZoom' },
+        { label: 'Light Mode / Dark Mode', accelerator: 'CmdOrCtrl+Shift+L', click: () => sendAction('toggle-theme') },
+        { type: 'separator' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
+        { role: 'resetZoom' },
         { type: 'separator' },
         { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Navigate',
+      submenu: [
+        { label: 'Projects', accelerator: 'CmdOrCtrl+1', click: () => sendAction('nav-projects') },
+        { label: 'Clients', accelerator: 'CmdOrCtrl+2', click: () => sendAction('nav-clients') },
+        { label: 'Team', accelerator: 'CmdOrCtrl+3', click: () => sendAction('nav-team') },
+        { label: 'Notes', accelerator: 'CmdOrCtrl+4', click: () => sendAction('nav-notes') },
+        { label: 'Today', accelerator: 'CmdOrCtrl+5', click: () => sendAction('nav-today') },
+        { type: 'separator' },
+        { label: 'Command Palette', accelerator: 'CmdOrCtrl+K', click: () => sendAction('command-palette') },
+        { label: 'Back', accelerator: 'CmdOrCtrl+[', click: () => sendAction('nav-back') },
+        { label: 'Forward', accelerator: 'CmdOrCtrl+]', click: () => sendAction('nav-forward') }
       ]
     },
     {
       label: 'Window',
       submenu: [
         { role: 'minimize' },
-        { role: 'zoom' },
-        ...(isMac ? [{ type: 'separator' }, { role: 'front' }, { type: 'separator' }, { role: 'window' }] : [{ role: 'close' }])
+        { role: 'front', label: 'Bring All to Front' },
+        { type: 'separator' },
+        { role: 'window' }
       ]
     },
     {
       role: 'help',
       submenu: [
-        {
-          label: 'Learn More',
-          click: async () => {
-            await shell.openExternal('https://github.com/Aadi-Coder303/Forma-workspace');
-          }
-        }
+        { label: 'Keyboard Shortcuts', accelerator: 'CmdOrCtrl+/', click: () => sendAction('keyboard-shortcuts') },
+        { label: 'Getting Started Guide', click: () => sendAction('getting-started') },
+        { type: 'separator' },
+        { label: 'Send Feedback', click: () => shell.openExternal('mailto:hello@formadigital.in?subject=Forma%20Workspace%20Feedback') },
+        { label: 'Report a Bug', click: () => shell.openExternal('mailto:hello@formadigital.in?subject=Forma%20Workspace%20Bug%20Report') }
       ]
     }
   ];

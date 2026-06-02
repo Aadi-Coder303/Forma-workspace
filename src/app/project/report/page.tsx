@@ -36,7 +36,7 @@ function ReportContent() {
   }
 
   if (!project) {
-    return <div className="p-10 text-slate-500">Loading Report...</div>;
+    return <div className="p-10 text-muted-500">Loading Report...</div>;
   }
 
   // Calculate Progress

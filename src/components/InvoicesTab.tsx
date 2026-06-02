@@ -71,12 +71,12 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
       <div className="max-w-6xl mx-auto space-y-12">
         <header className="flex items-end justify-between">
           <div>
-            <h1 className="font-display text-4xl text-mist font-medium tracking-wide mb-2">Invoices & Billing</h1>
-            <p className="text-slate">Manage your financial health across all clients and projects.</p>
+            <h1 className="font-display text-4xl text-primary font-medium tracking-wide mb-2">Invoices & Billing</h1>
+            <p className="text-muted">Manage your financial health across all clients and projects.</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-ember hover:bg-[#a65123] text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
+            className="bg-accent hover:bg-[#a65123] text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
           >
             <Icons.Plus size={16} />
             Create Invoice
@@ -85,41 +85,41 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
 
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-6">
-          <div className="bg-[rgba(244,242,238,0.02)] border border-[rgba(244,242,238,0.08)] rounded-2xl p-6">
-            <p className="text-slate text-sm mb-2">Total Invoiced (All Time)</p>
-            <p className="font-display text-2xl text-mist">${stats.total.toLocaleString()}</p>
+          <div className="bg-hover border border-border rounded-2xl p-6">
+            <p className="text-muted text-sm mb-2">Total Invoiced (All Time)</p>
+            <p className="font-display text-2xl text-primary">${stats.total.toLocaleString()}</p>
           </div>
-          <div className="bg-[rgba(244,242,238,0.02)] border border-[rgba(244,242,238,0.08)] rounded-2xl p-6">
-            <p className="text-slate text-sm mb-2">Total Paid</p>
-            <p className="font-display text-2xl text-moss">${stats.paid.toLocaleString()}</p>
+          <div className="bg-hover border border-border rounded-2xl p-6">
+            <p className="text-muted text-sm mb-2">Total Paid</p>
+            <p className="font-display text-2xl text-accent">${stats.paid.toLocaleString()}</p>
           </div>
-          <div className="bg-[rgba(199,98,42,0.1)] border border-[rgba(199,98,42,0.2)] rounded-2xl p-6">
-            <p className="text-slate text-sm mb-2">Outstanding / Unpaid</p>
-            <p className="font-display text-2xl text-ember">${stats.outstanding.toLocaleString()}</p>
+          <div className="bg-hover border border-border rounded-2xl p-6">
+            <p className="text-muted text-sm mb-2">Outstanding / Unpaid</p>
+            <p className="font-display text-2xl text-accent">${stats.outstanding.toLocaleString()}</p>
           </div>
-          <div className="bg-[rgba(244,242,238,0.02)] border border-[rgba(244,242,238,0.08)] rounded-2xl p-6">
-            <p className="text-slate text-sm mb-2">Draft Invoices</p>
-            <p className="font-display text-2xl text-mist">{stats.drafts}</p>
+          <div className="bg-hover border border-border rounded-2xl p-6">
+            <p className="text-muted text-sm mb-2">Draft Invoices</p>
+            <p className="font-display text-2xl text-primary">{stats.drafts}</p>
           </div>
         </div>
 
         {showForm && (
-          <div className="bg-[rgba(244,242,238,0.03)] border border-ember/30 rounded-2xl p-6 space-y-4">
-            <h2 className="text-mist font-medium">New Invoice</h2>
+          <div className="bg-hover border border-accent/30 rounded-2xl p-6 space-y-4">
+            <h2 className="text-primary font-medium">New Invoice</h2>
             <div className="grid grid-cols-2 gap-4">
               <input
                 type="text"
                 placeholder="Invoice Title (e.g. INV-001 - Initial Deposit)"
                 value={newInvoice.title}
                 onChange={e => setNewInvoice({ ...newInvoice, title: e.target.value })}
-                className="bg-[rgba(244,242,238,0.05)] border border-[rgba(244,242,238,0.1)] rounded-lg px-4 py-2 text-mist text-sm outline-none focus:border-ember"
+                className="bg-hover border border-border rounded-lg px-4 py-2 text-primary text-sm outline-none focus:border-accent"
               />
               <input
                 type="number"
                 placeholder="Amount ($)"
                 value={newInvoice.amount || ''}
                 onChange={e => setNewInvoice({ ...newInvoice, amount: Number(e.target.value) })}
-                className="bg-[rgba(244,242,238,0.05)] border border-[rgba(244,242,238,0.1)] rounded-lg px-4 py-2 text-mist text-sm outline-none focus:border-ember"
+                className="bg-hover border border-border rounded-lg px-4 py-2 text-primary text-sm outline-none focus:border-accent"
               />
               <select
                 value={newInvoice.projectId}
@@ -128,7 +128,7 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
                   const proj = db.projects.find(p => p.id === pid);
                   setNewInvoice({ ...newInvoice, projectId: pid, clientId: proj?.clientId || '' });
                 }}
-                className="bg-[rgba(244,242,238,0.05)] border border-[rgba(244,242,238,0.1)] rounded-lg px-4 py-2 text-mist text-sm outline-none focus:border-ember"
+                className="bg-hover border border-border rounded-lg px-4 py-2 text-primary text-sm outline-none focus:border-accent"
               >
                 <option value="">Select Project...</option>
                 {db.projects.map(p => (
@@ -139,19 +139,19 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
                 type="date"
                 value={newInvoice.dueDate}
                 onChange={e => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                className="bg-[rgba(244,242,238,0.05)] border border-[rgba(244,242,238,0.1)] rounded-lg px-4 py-2 text-mist text-sm outline-none focus:border-ember"
+                className="bg-hover border border-border rounded-lg px-4 py-2 text-primary text-sm outline-none focus:border-accent"
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowForm(false)} className="text-slate hover:text-mist text-sm transition-colors px-4 py-2">Cancel</button>
-              <button onClick={handleCreate} className="bg-ember hover:bg-[#a65123] text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">Save Invoice</button>
+              <button onClick={() => setShowForm(false)} className="text-muted hover:text-primary text-sm transition-colors px-4 py-2">Cancel</button>
+              <button onClick={handleCreate} className="bg-accent hover:bg-[#a65123] text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">Save Invoice</button>
             </div>
           </div>
         )}
 
-        <div className="bg-[rgba(244,242,238,0.02)] border border-[rgba(244,242,238,0.08)] rounded-2xl overflow-hidden">
+        <div className="bg-hover border border-border rounded-2xl overflow-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[rgba(244,242,238,0.03)] border-b border-[rgba(244,242,238,0.08)] text-slate">
+            <thead className="bg-hover border-b border-border text-muted">
               <tr>
                 <th className="px-6 py-4 font-medium">Invoice</th>
                 <th className="px-6 py-4 font-medium">Project</th>
@@ -164,24 +164,24 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
             <tbody className="divide-y divide-[rgba(244,242,238,0.04)]">
               {invoices.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate">No invoices created yet.</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-muted">No invoices created yet.</td>
                 </tr>
               ) : (
                 invoices.slice().reverse().map(inv => {
                   const proj = db.projects.find(p => p.id === inv.projectId);
                   return (
-                    <tr key={inv.id} className="hover:bg-[rgba(244,242,238,0.02)] transition-colors group">
+                    <tr key={inv.id} className="hover:bg-hover transition-colors group">
                       <td className="px-6 py-4">
-                        <p className="text-mist font-medium">{inv.title}</p>
+                        <p className="text-primary font-medium">{inv.title}</p>
                       </td>
-                      <td className="px-6 py-4 text-slate">{proj?.name || 'Unknown'}</td>
-                      <td className="px-6 py-4 text-mist">${inv.amount.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-slate">{inv.dueDate}</td>
+                      <td className="px-6 py-4 text-muted">{proj?.name || 'Unknown'}</td>
+                      <td className="px-6 py-4 text-primary">${inv.amount.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-muted">{inv.dueDate}</td>
                       <td className="px-6 py-4">
                         <select
                           value={inv.status}
                           onChange={(e) => handleStatusChange(inv.id, e.target.value as any)}
-                          className={`bg-transparent outline-none border-b border-transparent focus:border-slate py-1 ${inv.status === 'paid' ? 'text-moss' : inv.status === 'overdue' ? 'text-red-400' : inv.status === 'sent' ? 'text-ember' : 'text-slate'}`}
+                          className={`bg-transparent outline-none border-b border-transparent focus:border-slate py-1 ${inv.status === 'paid' ? 'text-accent' : inv.status === 'overdue' ? 'text-red-400' : inv.status === 'sent' ? 'text-accent' : 'text-muted'}`}
                         >
                           <option value="draft">Draft</option>
                           <option value="sent">Sent</option>
@@ -190,7 +190,7 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => handleDelete(inv.id)} className="text-slate hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                        <button onClick={() => handleDelete(inv.id)} className="text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
                           <Icons.Close size={16} />
                         </button>
                       </td>

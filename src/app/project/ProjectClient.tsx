@@ -20,12 +20,12 @@ function SortablePhase({ phase, children }: { phase: ProjectPhase, children: Rea
     opacity: isDragging ? 0.5 : 1,
   };
   return (
-    <div ref={setNodeRef} style={style} className="min-w-[320px] max-w-[320px] flex flex-col bg-[rgba(244,242,238,0.02)] border border-[rgba(244,242,238,0.05)] rounded-2xl p-4 max-h-full overflow-y-auto">
+    <div ref={setNodeRef} style={style} className="min-w-[320px] max-w-[320px] flex flex-col bg-hover border border-border rounded-2xl p-4 max-h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-4 px-1 group">
         <div>
-          <h3 className="font-display font-medium text-mist">{phase.name}</h3>
+          <h3 className="font-display font-medium text-primary">{phase.name}</h3>
           <div className="flex gap-2 mt-1">
-            <span className="text-[10px] text-slate bg-[rgba(244,242,238,0.1)] px-1.5 py-0.5 rounded-sm">
+            <span className="text-[10px] text-muted bg-hover px-1.5 py-0.5 rounded-sm">
               {phase.checklist.filter(i => i.isCompleted).length} / {phase.checklist.length} done
             </span>
             {phase.checklist.some(i => i.timeLogged) && (
@@ -35,7 +35,7 @@ function SortablePhase({ phase, children }: { phase: ProjectPhase, children: Rea
             )}
           </div>
         </div>
-        <div {...attributes} {...listeners} className="cursor-grab text-slate opacity-0 group-hover:opacity-100 transition-opacity">
+        <div {...attributes} {...listeners} className="cursor-grab text-muted opacity-0 group-hover:opacity-100 transition-opacity">
           <Icons.MoreVertical size={16} />
         </div>
       </div>
@@ -56,19 +56,19 @@ function SortableItem({ item, project, phase, handleToggleItem, loadProject }: a
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex items-start gap-2 p-3 rounded-xl border transition-all ${item.isCompleted ? 'bg-[rgba(244,242,238,0.02)] border-[rgba(244,242,238,0.05)] opacity-60' : 'bg-[rgba(244,242,238,0.04)] border-[rgba(244,242,238,0.1)] hover:border-ember'}`}>
-      <div {...attributes} {...listeners} className="cursor-grab mt-0.5 text-slate opacity-50 hover:opacity-100">
+    <div ref={setNodeRef} style={style} className={`flex items-start gap-2 p-3 rounded-xl border transition-all ${item.isCompleted ? 'bg-hover border-border opacity-60' : 'bg-hover border-border hover:border-accent'}`}>
+      <div {...attributes} {...listeners} className="cursor-grab mt-0.5 text-muted opacity-50 hover:opacity-100">
         <Icons.MoreVertical size={14} />
       </div>
-      <button onClick={() => handleToggleItem(phase.id, item)} className={`mt-0.5 w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-colors ${item.isCompleted ? 'bg-ember border-ember text-ink' : 'border-slate/50 hover:border-ember'}`}>
+      <button onClick={() => handleToggleItem(phase.id, item)} className={`mt-0.5 w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-colors ${item.isCompleted ? 'bg-accent border-accent text-primary' : 'border-slate/50 hover:border-accent'}`}>
         {item.isCompleted && <Icons.Check size={14} strokeWidth={3} />}
       </button>
       <div className="flex-1 text-left min-w-0">
-        <p className={`text-sm font-medium ${item.isCompleted ? 'line-through text-slate' : 'text-mist'}`}>
+        <p className={`text-sm font-medium ${item.isCompleted ? 'line-through text-muted' : 'text-primary'}`}>
           {item.title}
         </p>
         {item.subtasks?.length > 0 && (
-          <p className="text-xs text-slate mt-1.5">
+          <p className="text-xs text-muted mt-1.5">
             {item.subtasks.filter((s: any) => s.isCompleted).length} of {item.subtasks.length} subtasks
           </p>
         )}
@@ -77,7 +77,7 @@ function SortableItem({ item, project, phase, handleToggleItem, loadProject }: a
               <span className="text-[10px] uppercase font-bold text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded-sm flex items-center">Urgent</span>
             )}
             {item.completedAt && (
-              <span className="text-[10px] text-slate flex items-center">Done {new Date(item.completedAt).toLocaleDateString()}</span>
+              <span className="text-[10px] text-muted flex items-center">Done {new Date(item.completedAt).toLocaleDateString()}</span>
             )}
             
             {/* Time Tracking Controls */}
@@ -93,7 +93,7 @@ function SortableItem({ item, project, phase, handleToggleItem, loadProject }: a
                     loadProject();
                   }
                 }}
-                className={`p-1 rounded transition-colors ${item.timeIsRunning ? 'bg-amber-500/20 text-amber-400 animate-pulse' : 'hover:bg-[rgba(244,242,238,0.1)] text-slate hover:text-mist'}`}
+                className={`p-1 rounded transition-colors ${item.timeIsRunning ? 'bg-amber-500/20 text-amber-400 animate-pulse' : 'hover:bg-hover text-muted hover:text-primary'}`}
                 title={item.timeIsRunning ? "Stop Timer" : "Start Timer"}
               >
                 {item.timeIsRunning ? <Icons.StopCircle size={14} /> : <Icons.PlayCircle size={14} />}
@@ -107,7 +107,7 @@ function SortableItem({ item, project, phase, handleToggleItem, loadProject }: a
                     loadProject();
                   }
                 }}
-                className="p-1 rounded hover:bg-[rgba(244,242,238,0.1)] text-slate hover:text-mist transition-colors"
+                className="p-1 rounded hover:bg-hover text-muted hover:text-primary transition-colors"
                 title="Add Time Manually"
               >
                 <Icons.Plus size={14} />
@@ -252,10 +252,10 @@ export default function ProjectClient() {
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-ink text-mist font-body">
+      <div className="h-screen flex items-center justify-center bg-canvas text-primary font-body">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link href="/" className="text-ember hover:underline">← Back to Dashboard</Link>
+          <Link href="/" className="text-accent hover:underline">← Back to Dashboard</Link>
         </div>
       </div>
     );
@@ -263,11 +263,11 @@ export default function ProjectClient() {
 
   if (!project || !db) {
     return (
-      <div className="h-screen flex items-center justify-center bg-ink text-mist font-body">
+      <div className="h-screen flex items-center justify-center bg-canvas text-primary font-body">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-ember rounded-full animate-bounce" />
-          <div className="w-2 h-2 bg-ember rounded-full animate-bounce delay-100" />
-          <div className="w-2 h-2 bg-ember rounded-full animate-bounce delay-200" />
+          <div className="w-2 h-2 bg-accent rounded-full animate-bounce" />
+          <div className="w-2 h-2 bg-accent rounded-full animate-bounce delay-100" />
+          <div className="w-2 h-2 bg-accent rounded-full animate-bounce delay-200" />
         </div>
       </div>
     );
@@ -310,7 +310,7 @@ export default function ProjectClient() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-ink text-mist font-body overflow-hidden">
+    <div className="h-screen flex flex-col bg-canvas text-primary font-body overflow-hidden">
       {/* ── Native Title Bar ── */}
       <div 
         style={{ WebkitAppRegion: 'drag' } as any} 
@@ -318,54 +318,54 @@ export default function ProjectClient() {
       >
         <div className="flex items-center gap-4">
           <div style={{ WebkitAppRegion: 'no-drag' } as any} className="flex items-center gap-1">
-            <button onClick={() => router.back()} className="text-slate hover:text-mist transition-colors p-1 rounded-md hover:bg-white/5 cursor-pointer">
+            <button onClick={() => router.back()} className="text-muted hover:text-primary transition-colors p-1 rounded-md hover:bg-white/5 cursor-pointer">
               <Icons.ChevronLeft size={16} />
             </button>
-            <button onClick={() => router.forward()} className="text-slate hover:text-mist transition-colors p-1 rounded-md hover:bg-white/5 cursor-pointer">
+            <button onClick={() => router.forward()} className="text-muted hover:text-primary transition-colors p-1 rounded-md hover:bg-white/5 cursor-pointer">
               <Icons.ChevronRight size={16} />
             </button>
           </div>
-          <span className="text-slate text-xs font-medium tracking-wide">Forma Workspace</span>
+          <span className="text-muted text-xs font-medium tracking-wide">Forma Workspace</span>
         </div>
       </div>
 
       {/* ── TOP NAV ── */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-[rgba(244,242,238,0.1)] bg-[rgba(244,242,238,0.02)] drag-region">
+      <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-hover drag-region">
         <div className="flex items-center gap-4 no-drag">
-          <Link href="/" className="text-slate hover:text-mist transition-colors">
+          <Link href="/" className="text-muted hover:text-primary transition-colors">
             <Icons.ArrowLeft size={20} />
           </Link>
-          <div className="w-px h-6 bg-[rgba(244,242,238,0.1)]" />
+          <div className="w-px h-6 bg-hover" />
           <div>
             <h1 className="font-display font-semibold text-lg leading-tight">{project.name}</h1>
-            {client && <p className="text-xs text-slate">{client.name}</p>}
+            {client && <p className="text-xs text-muted">{client.name}</p>}
           </div>
         </div>
         <div className="flex items-center gap-3 no-drag">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate bg-[rgba(244,242,238,0.05)] px-3 py-1.5 rounded-full border border-[rgba(244,242,238,0.1)]">
-            <div className="w-2 h-2 rounded-full bg-ember animate-pulse" />
+          <div className="flex items-center gap-2 text-xs font-medium text-muted bg-hover px-3 py-1.5 rounded-full border border-border">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             {project.status}
           </div>
         </div>
       </header>
 
       {/* ── METADATA HEADER ── */}
-      <div className="px-8 py-6 border-b border-[rgba(244,242,238,0.1)] bg-[rgba(244,242,238,0.01)] flex items-center justify-between">
+      <div className="px-8 py-6 border-b border-border bg-hover flex items-center justify-between">
         <div className="flex gap-8">
           <div>
-            <p className="text-xs text-slate mb-1">Deadline</p>
+            <p className="text-xs text-muted mb-1">Deadline</p>
             <p className="font-medium">{project.deadline || 'No deadline set'}</p>
           </div>
           <div>
-            <p className="text-xs text-slate mb-1">Total Invoiced</p>
+            <p className="text-xs text-muted mb-1">Total Invoiced</p>
             <p className="font-medium">${totalInvoiced.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-xs text-slate mb-1">Balance Due</p>
-            <p className="font-medium text-ember">${balance.toLocaleString()}</p>
+            <p className="text-xs text-muted mb-1">Balance Due</p>
+            <p className="font-medium text-accent">${balance.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-xs text-slate mb-1">Priority</p>
+            <p className="text-xs text-muted mb-1">Priority</p>
             <p className="font-medium capitalize">{project.priority}</p>
           </div>
         </div>
@@ -373,24 +373,24 @@ export default function ProjectClient() {
           <Link 
             href={`/project/report?id=${project.id}`}
             target="_blank"
-            className="flex items-center gap-2 text-slate hover:text-mist text-xs font-medium bg-[rgba(244,242,238,0.03)] hover:bg-[rgba(244,242,238,0.06)] px-3 py-1.5 rounded-lg border border-[rgba(244,242,238,0.05)] transition-colors"
+            className="flex items-center gap-2 text-muted hover:text-primary text-xs font-medium bg-hover hover:bg-hover px-3 py-1.5 rounded-lg border border-border transition-colors"
           >
             <Icons.FileText size={14} />
             Status Report
           </Link>
           <button 
             onClick={handleSaveAsTemplate}
-            className="text-slate hover:text-mist text-xs font-medium bg-[rgba(244,242,238,0.03)] hover:bg-[rgba(244,242,238,0.06)] px-3 py-1.5 rounded-lg border border-[rgba(244,242,238,0.05)] transition-colors"
+            className="text-muted hover:text-primary text-xs font-medium bg-hover hover:bg-hover px-3 py-1.5 rounded-lg border border-border transition-colors"
           >
             Save as Template
           </button>
-          <div className="flex items-center gap-4 border-l border-[rgba(244,242,238,0.1)] pl-4">
+          <div className="flex items-center gap-4 border-l border-border pl-4">
             <div className="text-right">
-              <p className="text-xs text-slate mb-1">Overall Progress</p>
-              <p className="font-display font-bold text-lg text-ember">{progress}%</p>
+              <p className="text-xs text-muted mb-1">Overall Progress</p>
+              <p className="font-display font-bold text-lg text-accent">{progress}%</p>
             </div>
-            <div className="w-32 h-2 bg-[rgba(244,242,238,0.1)] rounded-full overflow-hidden">
-              <div className="h-full bg-ember transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="w-32 h-2 bg-hover rounded-full overflow-hidden">
+              <div className="h-full bg-accent transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function ProjectClient() {
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <main className="flex-1 overflow-x-auto p-8 flex gap-6 items-start">
           {project.phases.length === 0 ? (
-            <div className="w-full flex flex-col items-center justify-center mt-20 text-slate">
+            <div className="w-full flex flex-col items-center justify-center mt-20 text-muted">
               <p>No phases defined for this project.</p>
             </div>
           ) : (
@@ -421,13 +421,13 @@ export default function ProjectClient() {
         </main>
         <DragOverlay>
           {activeId && activeType === 'Phase' ? (
-            <div className="min-w-[320px] max-w-[320px] bg-[rgba(244,242,238,0.05)] border border-ember rounded-2xl p-4 opacity-80 scale-105 shadow-xl">
-              <h3 className="font-display font-medium text-mist">{activeData.phase.name}</h3>
+            <div className="min-w-[320px] max-w-[320px] bg-hover border border-accent rounded-2xl p-4 opacity-80 scale-105 shadow-xl">
+              <h3 className="font-display font-medium text-primary">{activeData.phase.name}</h3>
             </div>
           ) : null}
           {activeId && activeType === 'Item' ? (
-            <div className="p-3 rounded-xl border bg-[rgba(244,242,238,0.08)] border-ember opacity-80 scale-105 shadow-lg">
-              <p className="text-sm font-medium text-mist">{activeData.item.title}</p>
+            <div className="p-3 rounded-xl border bg-hover border-accent opacity-80 scale-105 shadow-lg">
+              <p className="text-sm font-medium text-primary">{activeData.item.title}</p>
             </div>
           ) : null}
         </DragOverlay>

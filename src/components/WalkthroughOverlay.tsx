@@ -237,7 +237,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
       {/* ── Skip button ── */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 text-xs text-[rgba(244,242,238,0.4)] hover:text-[rgba(244,242,238,0.8)] transition-colors cursor-pointer z-[101] px-3 py-1.5 rounded-lg border border-[rgba(244,242,238,0.1)] hover:border-[rgba(244,242,238,0.2)]"
+        className="absolute top-5 right-5 text-xs text-[rgba(244,242,238,0.4)] hover:text-[rgba(244,242,238,0.8)] transition-colors cursor-pointer z-[101] px-3 py-1.5 rounded-lg border border-border hover:border-border"
       >
         Skip tour  ✕
       </button>
@@ -269,7 +269,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
             transition: 'opacity 0.3s ease, transform 0.3s ease',
           }}
         >
-          <div className="bg-[#1e1b2e] border border-[rgba(199,98,42,0.25)] rounded-3xl p-10 shadow-2xl text-center">
+          <div className="bg-[#1e1b2e] border border-border rounded-3xl p-10 shadow-2xl text-center">
             {current.icon && (
               <div className="text-5xl mb-5">{current.icon}</div>
             )}
@@ -305,7 +305,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
             transition: 'opacity 0.25s ease, transform 0.25s ease',
           }}
         >
-          <div className="bg-[#1e1b2e] border border-[rgba(199,98,42,0.2)] rounded-2xl p-5 shadow-2xl">
+          <div className="bg-[#1e1b2e] border border-border rounded-2xl p-5 shadow-2xl">
             {/* Step counter */}
             <div className="text-[10px] text-[rgba(199,98,42,0.7)] uppercase tracking-widest font-semibold mb-2">
               Step {step} of {STEPS.length - 2}

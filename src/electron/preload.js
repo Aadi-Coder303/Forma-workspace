@@ -5,6 +5,10 @@ contextBridge.exposeInMainWorld('electron', {
   setBaseDirectory: (dir) => ipcRenderer.invoke('set-base-directory', dir),
   pickFolder: () => ipcRenderer.invoke('pick-folder'),
   importProject: () => ipcRenderer.invoke('import-project'),
+  
+  onMenuAction: (callback) => {
+    ipcRenderer.on('menu:action', (_event, action) => callback(action));
+  },
 
   // Projects
   createProject: (projectData) => ipcRenderer.invoke('create-project', projectData),
