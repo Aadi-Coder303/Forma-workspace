@@ -1,0 +1,204 @@
+{
+  "baseDirectory": "",
+  "projects": [],
+  "templates": [
+    {
+      "id": "b991b91a-4bf7-4851-ba0a-38ee36cd35cf",
+      "name": "Web Project",
+      "phases": [
+        {
+          "id": "ca8d228a-148e-4384-871e-34106743e29b",
+          "name": "Discovery",
+          "checklist": [
+            {
+              "id": "c81fc303-145f-476d-8005-6f467276e64a",
+              "title": "Kickoff Call",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "6ad6f003-1838-4c7a-bf6e-d1a341b685d6",
+              "title": "Sitemap Approved",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "6b6f4844-a90c-4277-b668-813781de5d59",
+          "name": "Design",
+          "checklist": [
+            {
+              "id": "2fa2b13a-4028-4f39-a123-db9ed176a532",
+              "title": "Wireframes",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "5fa4eeec-4549-48c1-988a-e0ca03c091f3",
+              "title": "High-Fidelity UI",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "55a270bb-9414-416f-8c60-3dd0bbf14de8",
+          "name": "Development",
+          "checklist": [
+            {
+              "id": "5b41325e-9468-42f8-9bb7-adc881ed68fe",
+              "title": "Frontend Build",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "c13fcc73-1158-4297-909c-adc1b5b93635",
+              "title": "CMS Integration",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "81783167-93b7-42aa-8de6-7070d65d5349",
+          "name": "Launch",
+          "checklist": [
+            {
+              "id": "8a0f8f49-a80d-4e9e-af02-e5857c010176",
+              "title": "QA Testing",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "62b68e7f-e23a-4f80-a3cc-9bc6099dd1d3",
+              "title": "Go Live",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fa6ed95b-4e3a-4c32-b1a1-af7256487595",
+      "name": "Branding",
+      "phases": [
+        {
+          "id": "c1e73774-ae79-4420-ae55-60d63be5c697",
+          "name": "Strategy",
+          "checklist": [
+            {
+              "id": "423c693f-d7ff-4ded-8a00-404a3700a50e",
+              "title": "Brand Questionnaire",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "4f165aa2-5371-45b5-84af-699edd5c4caa",
+              "title": "Moodboard",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "238aa319-ca3e-4727-ad99-ace9a7c1a833",
+          "name": "Design",
+          "checklist": [
+            {
+              "id": "f3970673-c5b1-45a6-8b8f-36dbc80dd952",
+              "title": "Logo Concepts",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "ef36acba-d228-4abe-aee4-e8a3391d43ff",
+              "title": "Color Palette & Typography",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "43dd084b-dd00-4387-88bd-c85906085c92",
+          "name": "Delivery",
+          "checklist": [
+            {
+              "id": "bdb55d7f-0da2-4fc6-bf4a-f7f6d89a0749",
+              "title": "Brand Guidelines",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "fcf56bdf-4af7-4299-a95d-6076ed4b8fb3",
+              "title": "Asset Export",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a393a63b-d90e-491f-87bd-2e42f0958e55",
+      "name": "App Development",
+      "phases": [
+        {
+          "id": "faf10140-ea22-4f47-94cf-26e3ee074b36",
+          "name": "Planning",
+          "checklist": [
+            {
+              "id": "334540ea-8bda-4d0d-bd50-16433d37849d",
+              "title": "User Flows",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "f2585062-e7d6-4098-8d56-3711fd710a01",
+              "title": "Architecture Design",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "0ff11e4b-1080-4a8e-a0a8-36d6170c0222",
+          "name": "Development",
+          "checklist": [
+            {
+              "id": "292b245a-f4f8-4f9d-b0c7-8769f44e73ba",
+              "title": "API Setup",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "87d02c9c-cf6e-4646-8182-9d003e1d6f3b",
+              "title": "UI Implementation",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "992f3dfb-adf2-4b04-ba3c-d2428ab0962b",
+          "name": "Launch",
+          "checklist": [
+            {
+              "id": "399c1d3f-8259-4435-bb63-38f9062ef170",
+              "title": "App Store Submission",
+              "isCompleted": false,
+              "subtasks": []
+            },
+            {
+              "id": "cd30937f-0350-4cd2-8fd0-9cf65374fd6f",
+              "title": "Marketing Assets",
+              "isCompleted": false,
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+
+FORMA
+Workspace Design Document
+
+v1.0   ·   June 2026   ·   Product & Design
+
+
+01 — VISION
+Built for coders.
+Nothing extra.
+
+Forma is a premium workspace for developers who want to think in projects, not apps. Every function you need is at most three interactions away — no buried menus, no cluttered sidebars, no distractions.
+The design philosophy is quiet confidence: dark enough to disappear into a long coding session, structured enough to feel like a professional tool, light enough to stay out of the way.
+
+02 — TYPOGRAPHY
+Type System
+
+Two typefaces only. Headings and display use Playfair Display — a high-contrast editorial serif that brings editorial weight without feeling academic. Body copy uses Lora, a well-spaced reading serif optimised for long-form legibility on screens.
+
+Playfair Display  —  Display & Headings
+Playfair Display  ·  Subheadings & Labels
+Lora  —  Body copy, descriptions, notes
+Lora  ·  Muted supporting text and metadata
+
+03 — COLOUR PALETTE
+Five Colours
+
+The palette is grounded in craft materials — aged paper, burnt clay, worked iron, dark moss. It avoids the blue-gradient defaults of most developer tools and instead reads as something made by hand.
+
+Swatch
+Name
+Hex
+Role
+
+Ink
+#1A1A2E
+Page background, primary text, nav rail
+
+Mist
+#F4F2EE
+Card surfaces, panel backgrounds
+
+Slate
+#6B6F7A
+Secondary text, placeholders, metadata
+
+Ember
+#C7622A
+Primary accent, CTAs, active states, links
+
+Moss
+#2E5E4E
+Secondary accent, success states, tags
+
+Dark-mode is the default. Ink becomes the base layer; Mist surfaces float above it. Ember provides punch exactly where focus is needed — new task buttons, active sidebar items, progress indicators. Moss handles all secondary confirmations.
+
+04 — CORE FEATURES
+Everything Within Three Clicks
+
+Every primary action in Forma is reachable from the keyboard shortcut bar or the command palette (Cmd + K). The sidebar exposes the six pillars of the product. Nothing is buried more than one level deep.
+
+Project Hub
+Project Board
+Kanban-style board per project. Drag cards between To Do, In Progress, Review, Done. Collapsible swimlanes per repo or milestone.
+Project Timeline
+Gantt-style visual over sprints. Click any card to expand inline. Drag handles to resize duration.
+Quick Create
+Press N from anywhere to open a floating card composer. Title, assign, tag, due date — all in one keystroke.
+
+Task & Checklist Engine
+Smart Checklists
+Nested sub-tasks up to three levels deep. Markdown-compatible. Auto-collapses completed items. Progress ring on parent.
+Recurring Tasks
+Set any task to repeat on custom schedules. Natural language input: "every Monday" or "last day of sprint".
+Dependencies
+Link tasks as blockers or related items. Blocked tasks grey out and surface a one-click resolve flow.
+Bulk Actions
+Select multiple tasks and assign, tag, move, or archive in a single action from the floating toolbar.
+
+Code Integration
+Repo Linking
+Connect any GitHub, GitLab, or Bitbucket repo. Tasks auto-link to branches and PRs by convention (#task-id).
+Commit Feed
+Inline commit log per project card. See exactly what was shipped against a task without leaving Forma.
+CI Status Badges
+Pipeline status (passing / failing / pending) surfaces directly on the project board card — no tab switching.
+Code Snippets
+Attach code blocks to any task or note. Syntax-highlighted, copy-to-clipboard, linkable by slug.
+
+Notes & Docs
+Project Notebook
+Each project has a persistent markdown notebook. Version-controlled. Searchable full-text. No separate tool needed.
+Quick Notes
+Cmd + Shift + N opens a floating scratchpad that autosaves to the current project context.
+Doc Templates
+Architecture review, sprint retro, bug report, RFC — pick a template and fill in the blanks.
+
+Focus Mode
+Today View
+A single-column daily agenda. Pulls tasks due today across all projects. Drag to reorder priority.
+Pomodoro Timer
+Built-in 25/5 timer docked to any task. Logs time automatically. Optional ambient sounds (off by default).
+Do Not Disturb
+One toggle silences all notifications and collapses the sidebar to icon-only for deep work sessions.
+
+Team & Collaboration
+Inline Comments
+Comment on any task, doc, or code snippet. @mention teammates. Threaded replies. Resolve to archive.
+Activity Feed
+Project-level feed shows every action, commit, and comment in reverse-chron. Filterable by type.
+Presence
+See who is active in the same project. Cursor presence on shared docs (Google Docs-style, no full app required).
+Roles
+Owner, Contributor, Viewer. Granular per-project. Invite by email or shareable link with expiry.
+
+Search & Command Palette
+Universal Search
+Cmd + K opens the command palette. Searches tasks, notes, files, teammates, and commands simultaneously.
+Filters
+Any list view can be filtered by assignee, tag, due date, status, or repo. Filters are shareable as saved views.
+Jump to Project
+Type any project name in the palette and land directly on the board. No sidebar scrolling.
+
+05 — NAVIGATION
+Three-Click Rule
+
+No action in Forma should require more than three interactions from any screen. The hierarchy is:
+
+	•	Global: Command palette (Cmd + K) — reaches anything instantly.
+	•	Contextual: Sidebar icon row — switches between Projects, Today, Notes, Search, Team, Settings.
+	•	Local: Inline toolbar on any card or row — Edit, Move, Assign, Archive without opening a modal.
+
+Modals are reserved for creation and destructive actions only. Editing always happens in-place.
+
+06 — PRINCIPLES
+Design Tenets
+
+	•	Quiet by default. No onboarding wizards, no confetti, no empty-state cartoons.
+	•	Keyboard-first. Every primary action has a shortcut. Mouse is optional.
+	•	One surface. Projects, tasks, notes, and code in one window — no tab sprawl.
+	•	Information density without clutter. Compact rows, expandable on demand.
+	•	Offline tolerant. Local-first data model. Syncs in background.
+
+
+Forma  ·  Design Document  ·  Confidential  ·  2026

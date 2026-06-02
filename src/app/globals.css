@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  /* Forma Color Palette */
+  --color-ink: #1A1A2E;
+  --color-mist: #F4F2EE;
+  --color-slate: #6B6F7A;
+  --color-ember: #C7622A;
+  --color-moss: #2E5E4E;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-mist: var(--color-mist);
+  --color-slate: var(--color-slate);
+  --color-ember: var(--color-ember);
+  --color-moss: var(--color-moss);
+  
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-lora);
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-mist);
+  font-family: var(--font-body), serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
