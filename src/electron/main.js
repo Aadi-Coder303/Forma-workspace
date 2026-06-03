@@ -66,7 +66,7 @@ function createWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
   } else {
-    mainWindow.loadURL('app://-/index.html');
+    mainWindow.loadURL('app://-/');
   }
 }
 
