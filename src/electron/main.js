@@ -49,7 +49,7 @@ function logActivity(db, action, details = '') {
 }
 
 function createWindow() {
-  const isDev = !app.isPackaged;
+  const isDev = !app.isPackaged && !process.env.TEST_PACKAGED;
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -63,6 +63,14 @@ function createWindow() {
     }
   });
 
+  if (process.env.TEST_PACKAGED) {
+    mainWindow.webContents.openDevTools();
+  }
+
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[RENDERER] ${message} (${sourceId}:${line})`);
+  });
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
   } else {
@@ -71,11 +79,15 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  const appRoot = app.getAppPath();
+  const outDir = path.join(appRoot, 'out');
+  console.log('[MAIN] appRoot:', appRoot, 'outDir:', outDir);
+
   protocol.handle('app', async (request) => {
     let urlPath = request.url.slice('app://-'.length);
     if (!urlPath || urlPath === '/') urlPath = '/index.html';
     urlPath = urlPath.split('?')[0];
-    let filePath = path.join(__dirname, '../../out', urlPath);
+    let filePath = path.join(outDir, urlPath);
     
     try {
       const stat = await fs.stat(filePath);
@@ -88,17 +100,20 @@ app.whenReady().then(() => {
       const data = await fs.readFile(filePath);
       const ext = path.extname(filePath).toLowerCase();
       const mimeTypes = {
-        '.html': 'text/html',
-        '.js': 'text/javascript',
-        '.css': 'text/css',
-        '.json': 'application/json',
+        '.html': 'text/html; charset=utf-8',
+        '.js': 'text/javascript; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.json': 'application/json; charset=utf-8',
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
         '.svg': 'image/svg+xml',
         '.woff': 'font/woff',
         '.woff2': 'font/woff2',
-        '.ttf': 'font/ttf'
+        '.ttf': 'font/ttf',
+        '.ico': 'image/x-icon',
+        '.txt': 'text/plain; charset=utf-8',
+        '.map': 'application/json',
       };
       return new Response(data, { headers: { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' } });
     } catch (e) {
