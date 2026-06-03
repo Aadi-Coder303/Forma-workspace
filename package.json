@@ -30,6 +30,7 @@
     ],
     "mac": {
       "target": [
+        "dmg",
         "zip"
       ]
     },
