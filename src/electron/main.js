@@ -71,12 +71,39 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  protocol.handle('app', (request) => {
+  protocol.handle('app', async (request) => {
     let urlPath = request.url.slice('app://-'.length);
     if (!urlPath || urlPath === '/') urlPath = '/index.html';
     urlPath = urlPath.split('?')[0];
-    const filePath = path.join(__dirname, '../../out', urlPath);
-    return net.fetch(url.pathToFileURL(filePath).toString());
+    let filePath = path.join(__dirname, '../../out', urlPath);
+    
+    try {
+      const stat = await fs.stat(filePath);
+      if (stat.isDirectory()) filePath = path.join(filePath, 'index.html');
+    } catch (e) {
+      if (!path.extname(filePath)) filePath += '.html';
+    }
+    
+    try {
+      const data = await fs.readFile(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.html': 'text/html',
+        '.js': 'text/javascript',
+        '.css': 'text/css',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+        '.woff': 'font/woff',
+        '.woff2': 'font/woff2',
+        '.ttf': 'font/ttf'
+      };
+      return new Response(data, { headers: { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' } });
+    } catch (e) {
+      return new Response('Not Found', { status: 404 });
+    }
   });
 
   const isMac = process.platform === 'darwin';
