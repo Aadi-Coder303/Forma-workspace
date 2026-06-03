@@ -60,14 +60,6 @@ const STEPS: Step[] = [
     tab: 'Notes',
   },
   {
-    id: 'tab-team',
-    title: 'Team',
-    body: 'Keep track of your collaborators. Add names, roles, and emails — great for sub-contractors or agency teammates.',
-    target: 'tab-team',
-    side: 'right',
-    tab: 'Team',
-  },
-  {
     id: 'tab-clients',
     title: 'Clients',
     body: 'A full CRM for freelancers. Store client details (email, phone, country, currency), link them to projects, and track every deal through a 9-section, 65-item checklist — from onboarding to handoff.',
@@ -76,12 +68,12 @@ const STEPS: Step[] = [
     tab: 'Clients',
   },
   {
-    id: 'tab-invoices',
-    title: 'Invoices',
-    body: 'Generate, manage, and track professional invoices. Link them to clients and projects, track payments, and get paid faster.',
-    target: 'tab-invoices',
+    id: 'tab-team',
+    title: 'Team',
+    body: 'Keep track of your collaborators. Add names, roles, and emails — great for sub-contractors or agency teammates.',
+    target: 'tab-team',
     side: 'right',
-    tab: 'Invoices',
+    tab: 'Team',
   },
   {
     id: 'search-btn',
@@ -222,7 +214,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
       {spotlight ? (
         <>
           {/* Four dark panels around the spotlight */}
-          <div className="absolute inset-0 pointer-events-none backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.5)' }} />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(10,10,20,0.80)' }} />
           {/* Spotlight cutout — transparent window */}
           <div
             className="absolute pointer-events-none rounded-2xl"
@@ -231,21 +223,21 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
               left:   spotlight.left,
               width:  spotlight.width,
               height: spotlight.height,
-              boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
-              border: '2px solid var(--accent)',
+              boxShadow: '0 0 0 9999px rgba(10,10,20,0.80)',
+              border: '2px solid rgba(199,98,42,0.7)',
               transition: 'all 0.3s ease',
               opacity: visible ? 1 : 0,
             }}
           />
         </>
       ) : (
-        <div className="absolute inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.7)' }} />
+        <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.88)' }} />
       )}
 
       {/* ── Skip button ── */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer z-[101] px-3 py-1.5 rounded-lg border border-white/20 hover:border-white/40"
+        className="absolute top-5 right-5 text-xs text-[rgba(244,242,238,0.4)] hover:text-[rgba(244,242,238,0.8)] transition-colors cursor-pointer z-[101] px-3 py-1.5 rounded-lg border border-border hover:border-border"
       >
         Skip tour  ✕
       </button>
@@ -259,7 +251,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
             style={{
               width:  i === step ? 20 : 6,
               height: 6,
-              backgroundColor: i === step ? 'var(--accent)' : i < step ? 'var(--text-muted)' : 'rgba(255,255,255,0.2)',
+              background: i === step ? '#C7622A' : i < step ? 'rgba(199,98,42,0.4)' : 'rgba(244,242,238,0.15)',
             }}
           />
         ))}
@@ -277,24 +269,24 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
             transition: 'opacity 0.3s ease, transform 0.3s ease',
           }}
         >
-          <div className="bg-card border border-border rounded-3xl p-10 shadow-2xl text-center">
+          <div className="bg-[#1e1b2e] border border-border rounded-3xl p-10 shadow-2xl text-center">
             {current.icon && (
               <div className="text-5xl mb-5">{current.icon}</div>
             )}
-            <h2 className="text-primary font-display text-2xl font-bold mb-3 leading-tight">
+            <h2 className="text-white font-display text-2xl font-bold mb-3 leading-tight">
               {current.title}
             </h2>
-            <p className="text-muted text-sm leading-relaxed mb-8">
+            <p className="text-[rgba(244,242,238,0.6)] text-sm leading-relaxed mb-8">
               {current.body}
             </p>
             <button
               onClick={advance}
-              className="bg-accent hover:opacity-90 text-canvas px-8 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer w-full"
+              className="bg-[#C7622A] hover:bg-[#a65123] text-white px-8 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer w-full"
             >
               {isLast ? 'Start using Forma Workspace →' : 'Start the tour →'}
             </button>
             {isLast && (
-              <p className="text-faint text-xs mt-4">
+              <p className="text-[rgba(244,242,238,0.3)] text-xs mt-4">
                 Re-launch anytime from Settings
               </p>
             )}
@@ -313,15 +305,15 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
             transition: 'opacity 0.25s ease, transform 0.25s ease',
           }}
         >
-          <div className="bg-card border border-border rounded-2xl p-5 shadow-2xl">
+          <div className="bg-[#1e1b2e] border border-border rounded-2xl p-5 shadow-2xl">
             {/* Step counter */}
-            <div className="text-[10px] text-accent uppercase tracking-widest font-semibold mb-2">
+            <div className="text-[10px] text-[rgba(199,98,42,0.7)] uppercase tracking-widest font-semibold mb-2">
               Step {step} of {STEPS.length - 2}
             </div>
-            <h3 className="text-primary font-display text-lg font-bold mb-2 leading-snug">
+            <h3 className="text-white font-display text-lg font-bold mb-2 leading-snug">
               {current.title}
             </h3>
-            <p className="text-muted text-[13px] leading-relaxed mb-5">
+            <p className="text-[rgba(244,242,238,0.6)] text-[13px] leading-relaxed mb-5">
               {current.body}
             </p>
 
@@ -330,20 +322,20 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
               <button
                 onClick={retreat}
                 disabled={isFirst}
-                className="text-xs text-muted hover:text-primary transition-colors cursor-pointer disabled:opacity-0"
+                className="text-xs text-[rgba(244,242,238,0.4)] hover:text-[rgba(244,242,238,0.8)] transition-colors cursor-pointer disabled:opacity-0"
               >
                 ← Back
               </button>
               <button
                 onClick={advance}
-                className="bg-accent hover:opacity-90 text-canvas px-5 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                className="bg-[#C7622A] hover:bg-[#a65123] text-white px-5 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer"
               >
                 {isLast ? 'Done ✓' : 'Next →'}
               </button>
             </div>
 
             {/* Keyboard hint */}
-            <p className="text-center text-[10px] text-faint mt-3">
+            <p className="text-center text-[10px] text-[rgba(244,242,238,0.2)] mt-3">
               ← → arrow keys to navigate  ·  Esc to skip
             </p>
           </div>

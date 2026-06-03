@@ -1,16 +1,13 @@
-const { app, net } = require('electron');
+const fs = require('fs/promises');
 const path = require('path');
-const url = require('url');
-
-app.whenReady().then(async () => {
-  const asarPath = path.join(__dirname, 'dist/mac/Forma Workspace.app/Contents/Resources/app.asar/out/index.html');
-  const fileUrl = url.pathToFileURL(asarPath).toString();
+(async () => {
   try {
-    const res = await net.fetch(fileUrl);
-    console.log("FETCH STATUS:", res.status);
-    console.log("FETCH TEXT:", (await res.text()).slice(0, 100));
+    const stat = await fs.stat(path.join(__dirname, 'test.asar', 'index.html'));
+    console.log('stat:', stat.isFile());
+    const data = await fs.readFile(path.join(__dirname, 'test.asar', 'index.html'));
+    console.log('read len:', data.length);
   } catch (e) {
-    console.error("FETCH ERROR:", e);
+    console.error('Error:', e);
   }
-  app.quit();
-});
+  process.exit(0);
+})();

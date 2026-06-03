@@ -86,20 +86,7 @@ app.whenReady().then(() => {
   protocol.handle('app', (request) => {
     let urlPath = request.url.slice('app://-'.length);
     if (!urlPath || urlPath === '/') urlPath = '/index.html';
-    
-    // Extract query string
-    const queryIndex = urlPath.indexOf('?');
-    const queryString = queryIndex !== -1 ? urlPath.substring(queryIndex) : '';
     urlPath = urlPath.split('?')[0];
-    
-    // Decode URI component (e.g. %20 -> space)
-    urlPath = decodeURIComponent(urlPath);
-    
-    // Next.js App Router RSC payload workaround:
-    // If the request has ?_rsc=... or HTTP Headers include RSC: 1, Next.js might be requesting RSC payload.
-    // However, on static export, Next.js usually requests .txt files. Let's just log it.
-    console.log(`[PROTOCOL] Request: ${request.url} | method: ${request.method} | path: ${urlPath}`);
-    
     let filePath = path.join(outDir, urlPath);
     
     // Use synchronous fs to avoid ASAR bugs with fs/promises
@@ -132,7 +119,7 @@ app.whenReady().then(() => {
         '.woff2': 'font/woff2',
         '.ttf': 'font/ttf',
         '.ico': 'image/x-icon',
-        '.txt': 'text/x-component',
+        '.txt': 'text/plain; charset=utf-8',
         '.map': 'application/json',
       };
       return new Response(data, { headers: { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' } });

@@ -72,9 +72,6 @@ export default function DashboardClient() {
   const [todayFocus, setTodayFocus] = useState('');
   const [focusSaved, setFocusSaved] = useState(false);
 
-  // Archive state
-  const [showArchived, setShowArchived] = useState(false);
-
   // Updater state
   const [appVersion, setAppVersion] = useState('');
   const [updaterStatus, setUpdaterStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'>('idle');
@@ -353,7 +350,7 @@ export default function DashboardClient() {
   const safeTeam    = safeDb.team;
   const safeClients = (safeDb as any).clients as Client[] ?? [];
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  
+  const [showArchived, setShowArchived] = useState(false);
   const activeProjects = safeDb.projects.filter(p => showArchived ? p.status === 'archived' : p.status !== 'archived');
   const recentProjects = safeDb.projects.filter(p => p.status !== 'archived').slice().reverse().slice(0, 5);
 
