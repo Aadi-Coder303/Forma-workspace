@@ -152,7 +152,7 @@ app.whenReady().then(() => {
       label: app.name,
       submenu: [
         { role: 'about', label: 'About Forma Workspace' },
-        { label: 'Check for Updates', click: () => autoUpdater.checkForUpdates() },
+        { label: 'Check for Updates', click: () => sendAction('show-updates') },
         { type: 'separator' },
         { label: 'Preferences', accelerator: 'CmdOrCtrl+,', click: () => sendAction('preferences') },
         { type: 'separator' },
@@ -246,6 +246,10 @@ app.whenReady().then(() => {
   // -- AUTO UPDATER CONFIG --
   autoUpdater.autoDownload = false; // Check auto, install manually
   
+  autoUpdater.on('checking-for-update', () => {
+    if (mainWindow) mainWindow.webContents.send('updater:checking-for-update');
+  });
+
   autoUpdater.on('update-available', (info) => {
     if (mainWindow) mainWindow.webContents.send('updater:update-available', info);
   });
@@ -324,6 +328,47 @@ ipcMain.handle('get-app-version', () => app.getVersion());
     logActivity(db, 'Imported project folder', folderPath);
     await saveDb(db);
     return newProject.id;
+  });
+
+  ipcMain.handle('sync-local-directory', async () => {
+    const db = await getDb();
+    if (!db.baseDirectory) return 0;
+    
+    try {
+      const items = await fs.readdir(db.baseDirectory, { withFileTypes: true });
+      let addedCount = 0;
+      
+      for (const item of items) {
+        if (item.isDirectory()) {
+          const folderPath = path.join(db.baseDirectory, item.name);
+          const exists = db.projects.some(p => p.folderPath === folderPath);
+          
+          if (!exists) {
+            const newProject = {
+              id: crypto.randomUUID(),
+              name: item.name,
+              folderPath,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              status: 'active',
+              phases: []
+            };
+            db.projects.push(newProject);
+            addedCount++;
+          }
+        }
+      }
+      
+      if (addedCount > 0) {
+        logActivity(db, 'Synced local directory', `Imported ${addedCount} missing folders`);
+        await saveDb(db);
+      }
+      
+      return addedCount;
+    } catch (e) {
+      console.error("Failed to sync local directory", e);
+      return 0;
+    }
   });
 
   // Projects

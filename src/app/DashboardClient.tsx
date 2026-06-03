@@ -162,6 +162,13 @@ export default function DashboardClient() {
         if (action === 'nav-forward') router.forward();
         if (action === 'keyboard-shortcuts') setShowShortcutsModal(true);
         if (action === 'getting-started') setShowTour(true);
+        if (action === 'preferences' || action === 'show-updates') {
+          setActiveTab('Settings');
+          if (action === 'show-updates' && window.electron?.updater) {
+            setUpdaterStatus('checking');
+            window.electron.updater.check();
+          }
+        }
       });
     }
 
@@ -171,9 +178,11 @@ export default function DashboardClient() {
       window.electron.updater.getVersion().then(setAppVersion).catch(() => {});
       
       unsubs = [
+        window.electron.updater.onEvent('updater:checking-for-update', () => {
+          setUpdaterStatus('checking');
+        }),
         window.electron.updater.onEvent('updater:update-available', () => {
           setUpdaterStatus('available');
-          // auto download is false, so we trigger download when user clicks a button, or we can just download right away
           // Let's just download it right away since the user wanted it
           window.electron.updater.download();
         }),
@@ -227,8 +236,31 @@ export default function DashboardClient() {
     }
   };
 
-  const handleImportProject = () => {
-    alert("Import Project feature is a stub! Ready to implement JSON ingestion.");
+  const handleImportProject = async () => {
+    if (!window.electron) return;
+    try {
+      const pid = await window.electron.importProject();
+      if (pid) {
+        await loadDb(); // reload db to show new project
+        router.push(`/project?id=${pid}`);
+      }
+    } catch (err: any) {
+      alert('Failed to import project: ' + err.message);
+    }
+  };
+
+  const handleSyncLocalDirectory = async () => {
+    if (!window.electron) return;
+    setIsPending(true);
+    try {
+      const addedCount = await window.electron.syncLocalDirectory();
+      await loadDb(); // reload db to show new projects
+      alert(`Successfully synced and imported ${addedCount} project(s)!`);
+    } catch (err: any) {
+      alert('Failed to sync directory: ' + err.message);
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleExportProject = () => {
@@ -538,6 +570,15 @@ export default function DashboardClient() {
                     className="bg-hover hover:bg-hover text-primary border border-border rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer"
                   >
                     Save
+                  </button>
+                  <button
+                    onClick={handleSyncLocalDirectory}
+                    disabled={isPending}
+                    title="Scan this directory and auto-import missing folders as projects"
+                    className="bg-accent hover:bg-[#a65123] text-canvas border border-transparent rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Icons.Refresh size={15} />
+                    Sync
                   </button>
                 </div>
               </div>

@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electron', {
   setBaseDirectory: (dir) => ipcRenderer.invoke('set-base-directory', dir),
   pickFolder: () => ipcRenderer.invoke('pick-folder'),
   importProject: () => ipcRenderer.invoke('import-project'),
+  syncLocalDirectory: () => ipcRenderer.invoke('sync-local-directory'),
   
   onMenuAction: (callback) => {
     ipcRenderer.on('menu:action', (_event, action) => callback(action));
@@ -55,6 +56,7 @@ contextBridge.exposeInMainWorld('electron', {
     getVersion: () => ipcRenderer.invoke('get-app-version'),
     onEvent: (channel, callback) => {
       const validChannels = [
+        'updater:checking-for-update',
         'updater:update-available',
         'updater:update-not-available',
         'updater:download-progress',

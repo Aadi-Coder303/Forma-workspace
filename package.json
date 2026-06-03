@@ -1,6 +1,6 @@
 {
   "name": "forma-workspace",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "main": "src/electron/main.js",
   "scripts": {
@@ -30,7 +30,6 @@
     ],
     "mac": {
       "target": [
-        "dmg",
         "zip"
       ]
     },
