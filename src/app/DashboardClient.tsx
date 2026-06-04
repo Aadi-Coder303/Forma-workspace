@@ -230,6 +230,10 @@ export default function DashboardClient() {
 
   const handleSaveDir = async () => {
     if (!window.electron) return;
+    if (!dirInput.startsWith('/')) {
+      alert("Please enter a valid absolute path (e.g., /Users/yourname/Projects) or use the Browse button.");
+      return;
+    }
     setIsPending(true);
     try {
       setError('');

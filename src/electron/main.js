@@ -541,6 +541,9 @@ ipcMain.handle('get-app-version', () => app.getVersion());
   ipcMain.handle('get-db', async () => await getDb());
 
   ipcMain.handle('set-base-directory', async (_, directory) => {
+    if (!path.isAbsolute(directory)) {
+      throw new Error("Base directory must be an absolute path (e.g., /Users/name/Projects)");
+    }
     const db = await getDb();
     db.baseDirectory = directory;
     await saveDb(db);
@@ -622,7 +625,9 @@ ipcMain.handle('get-app-version', () => app.getVersion());
   // Projects
   ipcMain.handle('create-project', async (_, projectData) => {
     const db = await getDb();
-    if (!db.baseDirectory) throw new Error("Base directory is not set.");
+    if (!db.baseDirectory || !path.isAbsolute(db.baseDirectory)) {
+      throw new Error("Base directory is not set or is not a valid absolute path.");
+    }
     if (!projectData.name.trim()) throw new Error("Project name is required");
 
     const folderName = projectData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
