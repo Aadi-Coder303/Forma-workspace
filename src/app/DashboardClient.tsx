@@ -586,8 +586,16 @@ export default function DashboardClient() {
             </div>
 
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-display text-xl text-primary">Active Projects</h2>
-              <span className="text-sm text-muted">{safeDb.projects.length} project{safeDb.projects.length !== 1 ? 's' : ''}</span>
+              <h2 className="font-display text-xl text-primary">{showArchived ? 'Archived Projects' : 'Active Projects'}</h2>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="text-xs text-muted hover:text-accent transition-colors cursor-pointer border border-border px-3 py-1 rounded-full"
+                >
+                  {showArchived ? 'View Active' : 'View Archived'}
+                </button>
+                <span className="text-sm text-muted">{safeDb.projects.length} project{safeDb.projects.length !== 1 ? 's' : ''}</span>
+              </div>
             </div>
 
             {safeDb.projects.length === 0 ? (
