@@ -600,6 +600,17 @@ export default function DashboardClient() {
                 </div>
               </div>
 
+              {/* Today's Focus */}
+              {safeDb.todayFocus && (
+                <div className="bg-hover border border-accent/20 rounded-2xl p-6 shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Icons.Today size={16} className="text-accent" />
+                    <h3 className="text-accent text-sm font-medium uppercase tracking-wider">Today's Focus</h3>
+                  </div>
+                  <p className="text-primary font-display text-2xl leading-snug whitespace-pre-wrap">{safeDb.todayFocus}</p>
+                </div>
+              )}
+
               {/* Workspace Dir (Only show if not synced OR if base directory is missing) */}
               {(!hasSynced || !safeDb.baseDirectory) && (
                 <div className="bg-hover border border-border rounded-2xl p-6">
@@ -750,13 +761,13 @@ export default function DashboardClient() {
                       value={todayFocus}
                       onChange={e => setTodayFocus(e.target.value)}
                       placeholder="What is the one thing you need to accomplish today?"
-                      className="w-full bg-hover border border-border rounded-xl p-5 text-sm text-primary outline-none focus:border-accent transition-colors resize-none h-40 font-body leading-relaxed"
+                      className="w-full bg-hover border border-border rounded-xl p-6 text-xl lg:text-2xl font-display text-primary outline-none focus:border-accent transition-colors resize-none h-40 leading-relaxed"
                     />
                     <div className="absolute bottom-4 right-4 flex items-center gap-3">
                       {focusSaved && <span className="text-xs text-accent animate-fade-in">Saved</span>}
                       <button
                         onClick={handleSaveFocus}
-                        className="bg-accent text-canvas px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-[#a65123] transition-colors cursor-pointer"
+                        className="bg-accent text-canvas px-3 py-1 rounded text-[10px] uppercase tracking-wider font-bold hover:bg-[#a65123] transition-colors cursor-pointer"
                       >
                         Commit
                       </button>

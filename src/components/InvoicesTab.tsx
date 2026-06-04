@@ -76,7 +76,7 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-accent hover:bg-[#a65123] text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
+            className="bg-accent hover:bg-[#a65123] text-canvas px-6 py-3 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
           >
             <Icons.Plus size={16} />
             Create Invoice
@@ -144,7 +144,7 @@ export default function InvoicesTab({ db, onRefresh }: InvoicesTabProps) {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setShowForm(false)} className="text-muted hover:text-primary text-sm transition-colors px-4 py-2">Cancel</button>
-              <button onClick={handleCreate} className="bg-accent hover:bg-[#a65123] text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">Save Invoice</button>
+              <button onClick={handleCreate} className="bg-accent hover:bg-[#a65123] text-canvas px-6 py-2 rounded-lg text-sm font-medium transition-colors">Save Invoice</button>
             </div>
           </div>
         )}
