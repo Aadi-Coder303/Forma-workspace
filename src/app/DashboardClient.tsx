@@ -140,7 +140,7 @@ export default function DashboardClient() {
       
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault();
-        setShowWizard(true);
+        handleOpenWizard();
       }
 
       if (e.key === 'Escape') {
@@ -155,7 +155,7 @@ export default function DashboardClient() {
     if (window.electron && window.electron.onMenuAction) {
       window.electron.onMenuAction((action) => {
         if (action === 'preferences') setActiveTab('Settings');
-        if (action === 'new-project') setShowWizard(true);
+        if (action === 'new-project') handleOpenWizard();
         if (action === 'import-project') handleImportProject();
         if (action === 'export-project') handleExportProject();
         if (action === 'find') setSearchOpen(true);
@@ -220,6 +220,14 @@ export default function DashboardClient() {
   }, [loadDb]);
 
   // ─── Projects ──────────────────────────────────────────────────────────────
+  const handleOpenWizard = () => {
+    if (db && !db.baseDirectory) {
+      alert("Please set your base directory first.");
+      return;
+    }
+    setShowWizard(true);
+  };
+
   const handleSaveDir = async () => {
     if (!window.electron) return;
     setIsPending(true);
@@ -579,7 +587,7 @@ export default function DashboardClient() {
                       Import Existing
                     </button>
                     <button
-                      onClick={() => setShowWizard(true)}
+                      onClick={handleOpenWizard}
                       className="flex-1 bg-accent text-canvas rounded-lg py-2.5 text-sm font-medium hover:bg-[#a65123] transition-colors cursor-pointer shadow-sm"
                     >
                       + New Project
@@ -588,8 +596,8 @@ export default function DashboardClient() {
                 </div>
               </div>
 
-              {/* Workspace Dir (Only show if not synced) */}
-              {!hasSynced && (
+              {/* Workspace Dir (Only show if not synced OR if base directory is missing) */}
+              {(!hasSynced || !safeDb.baseDirectory) && (
                 <div className="bg-hover border border-border rounded-2xl p-6">
                   <div className="flex items-center gap-2 mb-2 text-primary">
                     <Icons.Projects size={18} className="text-muted" />
