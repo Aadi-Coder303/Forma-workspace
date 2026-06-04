@@ -1,4 +1,4 @@
-import { DBData, Client, TeamMember, Note, Template, Project, CommunicationLog, Invoice } from "./lib/db";
+import { DBData, Client, TeamMember, TeamTask, Note, Template, Project, CommunicationLog, Invoice } from "./lib/types";
 
 declare global {
   interface Window {
@@ -38,6 +38,9 @@ declare global {
       // Team
       createTeamMember: (name: string, role: string, email: string, color: string) => Promise<TeamMember>;
       deleteTeamMember: (memberId: string) => Promise<boolean>;
+      createTeamTask: (fields: Omit<TeamTask, 'id' | 'createdAt' | 'isCompleted' | 'completedAt'>) => Promise<TeamTask>;
+      updateTeamTask: (taskId: string, fields: Partial<TeamTask>) => Promise<TeamTask | false>;
+      deleteTeamTask: (taskId: string) => Promise<boolean>;
       
       // Clients
       createClient: (fields: Omit<Client, 'id' | 'createdAt' | 'logs'>) => Promise<Client>;

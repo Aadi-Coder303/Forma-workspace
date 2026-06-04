@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DBData, Invoice, Client, Project } from '@/lib/db';
+import { DBData, Invoice, Client, Project } from '@/lib/types';
 import { Icons } from './ui/icons';
 
 type InvoicesTabProps = {

@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('electron', {
   // Team
   createTeamMember: (name, role, email, color) => ipcRenderer.invoke('create-team-member', name, role, email, color),
   deleteTeamMember: (memberId) => ipcRenderer.invoke('delete-team-member', memberId),
+  createTeamTask: (fields) => ipcRenderer.invoke('create-team-task', fields),
+  updateTeamTask: (taskId, fields) => ipcRenderer.invoke('update-team-task', taskId, fields),
+  deleteTeamTask: (taskId) => ipcRenderer.invoke('delete-team-task', taskId),
 
   // Clients
   createClient: (fields) => ipcRenderer.invoke('create-client', fields),

@@ -24,7 +24,7 @@ const STEPS: Step[] = [
     id: 'nav-rail',
     title: 'The Navigation Rail',
     body: 'Everything lives here — Projects, Today, Notes, Team, Clients, and Settings. One click to switch, no nesting, no menus.',
-    target: 'nav-rail',
+    target: 'sidebar-nav',
     side: 'right',
   },
   {

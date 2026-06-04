@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { DBData, Note, TeamMember, Client } from '@/lib/db';
+import { DBData, Note, TeamMember, TeamTask, Client } from '@/lib/types';
 import Link from 'next/link';
 import { Icons } from '@/components/ui/icons';
 import ClientsTab from '@/components/ClientsTab';
@@ -59,6 +59,10 @@ export default function DashboardClient() {
   // Team state
   const [newMember, setNewMember] = useState({ name: '', role: '', email: '', color: MEMBER_COLORS[0] });
   const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [teamTaskFilter, setTeamTaskFilter] = useState<'all' | 'active' | 'done'>('active');
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', priority: 'normal' as 'low' | 'normal' | 'urgent', dueDate: '', note: '', projectId: '' });
 
   // Sidebar state
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -350,15 +354,50 @@ export default function DashboardClient() {
   // ─── Team ──────────────────────────────────────────────────────────────────
   const handleAddMember = async () => {
     if (!window.electron || !newMember.name) return;
-    await window.electron.createTeamMember(newMember.name, newMember.role, newMember.email, newMember.color);
+    const m = await window.electron.createTeamMember(newMember.name, newMember.role, newMember.email, newMember.color);
     setNewMember({ name: '', role: '', email: '', color: MEMBER_COLORS[0] });
     setShowAddMember(false);
     await loadDb();
+    setSelectedMember(m);
   };
 
   const handleDeleteMember = async (memberId: string) => {
     if (!window.electron) return;
+    if (!confirm('Remove this team member? Their tasks will also be deleted.')) return;
     await window.electron.deleteTeamMember(memberId);
+    // also delete their tasks
+    const tasks = (db as any)?.teamTasks as TeamTask[] ?? [];
+    for (const t of tasks.filter((x: TeamTask) => x.assigneeId === memberId)) {
+      await window.electron.deleteTeamTask(t.id);
+    }
+    if (selectedMember?.id === memberId) setSelectedMember(null);
+    await loadDb();
+  };
+
+  const handleAddTask = async () => {
+    if (!window.electron || !selectedMember || !newTask.title.trim()) return;
+    await window.electron.createTeamTask({
+      title: newTask.title.trim(),
+      assigneeId: selectedMember.id,
+      priority: newTask.priority,
+      dueDate: newTask.dueDate || undefined,
+      note: newTask.note || undefined,
+      projectId: newTask.projectId || undefined,
+    });
+    setNewTask({ title: '', priority: 'normal', dueDate: '', note: '', projectId: '' });
+    setShowAddTask(false);
+    await loadDb();
+  };
+
+  const handleToggleTask = async (taskId: string, current: boolean) => {
+    if (!window.electron) return;
+    await window.electron.updateTeamTask(taskId, { isCompleted: !current });
+    await loadDb();
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.electron) return;
+    await window.electron.deleteTeamTask(taskId);
     await loadDb();
   };
 
@@ -373,7 +412,7 @@ export default function DashboardClient() {
   // ─── Render guards ─────────────────────────────────────────────────────────
   // Normalise: old projects.json may not have notes / team / todayFocus
   const safeDb = db
-    ? { ...db, notes: db.notes ?? [], team: db.team ?? [], todayFocus: db.todayFocus ?? '' }
+    ? { ...db, notes: db.notes ?? [], team: db.team ?? [], teamTasks: (db as any).teamTasks ?? [], todayFocus: db.todayFocus ?? '' }
     : null;
 
   if (!safeDb) {
@@ -870,114 +909,390 @@ export default function DashboardClient() {
 
         {/* ── TEAM TAB ── */}
         {activeTab === 'Team' && (
-          <main className="flex-1 overflow-y-auto p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="font-display text-2xl text-primary font-medium">Your Team</h2>
-                <p className="text-muted text-sm mt-1">{safeTeam.length} collaborator{safeTeam.length !== 1 ? 's' : ''}</p>
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left: Member List */}
+            <div className="w-72 shrink-0 border-r border-border flex flex-col">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <span className="text-xs text-muted uppercase tracking-widest font-semibold">Team</span>
+                <button
+                  onClick={() => setShowAddMember(v => !v)}
+                  className="flex items-center gap-1.5 text-xs bg-accent text-canvas px-3 py-1.5 rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer font-medium"
+                >
+                  <Icons.Plus size={12} />
+                  Add
+                </button>
               </div>
-              <button
-                onClick={() => setShowAddMember(true)}
-                className="bg-accent text-canvas px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#a65123] transition-colors cursor-pointer flex items-center gap-2"
-              >
-                <Icons.Plus size={14} />
-                Add Member
-              </button>
-            </div>
 
-            {/* Add member form */}
-            {showAddMember && (
-              <div className="bg-hover border border-border rounded-2xl p-6 mb-8">
-                <h3 className="font-display text-lg text-primary mb-4">Add a Collaborator</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <input
-                    className="bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
-                    placeholder="Full Name *"
-                    value={newMember.name}
-                    onChange={e => setNewMember(m => ({ ...m, name: e.target.value }))}
-                  />
-                  <input
-                    className="bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
-                    placeholder="Role (e.g. Designer)"
-                    value={newMember.role}
-                    onChange={e => setNewMember(m => ({ ...m, role: e.target.value }))}
-                  />
-                  <input
-                    className="bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
-                    placeholder="Email"
-                    type="email"
-                    value={newMember.email}
-                    onChange={e => setNewMember(m => ({ ...m, email: e.target.value }))}
-                  />
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted text-xs">Colour:</span>
-                    <div className="flex gap-2">
-                      {MEMBER_COLORS.map(c => (
-                        <button
-                          key={c}
-                          onClick={() => setNewMember(m => ({ ...m, color: c }))}
-                          className={`w-6 h-6 rounded-full transition-transform cursor-pointer ${newMember.color === c ? 'scale-125 ring-2 ring-mist ring-offset-1 ring-offset-ink' : ''}`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
+              {/* Add member inline form */}
+              {showAddMember && (
+                <div className="p-4 border-b border-border bg-hover">
+                  <p className="text-xs text-muted mb-3 font-medium uppercase tracking-wider">New Collaborator</p>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      className="bg-canvas border border-border rounded-lg px-3 py-2 text-sm text-primary outline-none focus:border-accent transition-colors"
+                      placeholder="Full Name *"
+                      value={newMember.name}
+                      autoFocus
+                      onChange={e => setNewMember(m => ({ ...m, name: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddMember(); if (e.key === 'Escape') setShowAddMember(false); }}
+                    />
+                    <input
+                      className="bg-canvas border border-border rounded-lg px-3 py-2 text-sm text-primary outline-none focus:border-accent transition-colors"
+                      placeholder="Role"
+                      value={newMember.role}
+                      onChange={e => setNewMember(m => ({ ...m, role: e.target.value }))}
+                    />
+                    <input
+                      className="bg-canvas border border-border rounded-lg px-3 py-2 text-sm text-primary outline-none focus:border-accent transition-colors"
+                      placeholder="Email"
+                      type="email"
+                      value={newMember.email}
+                      onChange={e => setNewMember(m => ({ ...m, email: e.target.value }))}
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted text-xs">Color:</span>
+                      <div className="flex gap-1.5">
+                        {MEMBER_COLORS.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => setNewMember(m => ({ ...m, color: c }))}
+                            className={`w-5 h-5 rounded-full cursor-pointer transition-transform ${newMember.color === c ? 'scale-125 ring-2 ring-white/40 ring-offset-1 ring-offset-hover' : ''}`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <button onClick={() => setShowAddMember(false)} className="flex-1 text-muted text-sm hover:text-primary cursor-pointer py-1.5 border border-border rounded-lg transition-colors">Cancel</button>
+                      <button
+                        onClick={handleAddMember}
+                        disabled={!newMember.name}
+                        className="flex-1 bg-accent text-canvas text-sm py-1.5 rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-40 font-medium"
+                      >Add</button>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-3 justify-end">
-                  <button onClick={() => setShowAddMember(false)} className="text-muted text-sm hover:text-primary cursor-pointer px-4 py-2">Cancel</button>
-                  <button
-                    onClick={handleAddMember}
-                    disabled={!newMember.name}
-                    className="bg-accent text-canvas px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
 
-            {safeTeam.length === 0 ? (
-              <div className="border border-dashed border-border rounded-2xl py-16 flex flex-col items-center justify-center text-muted">
-                <Icons.Team size={32} className="mb-4 opacity-50" />
-                <p>No collaborators yet.</p>
-                <p className="text-xs mt-1 opacity-70">Add your first team member above.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {safeTeam.map((member: TeamMember) => {
-                  const activeTasks = safeDb.projects.flatMap(p => 
-                    p.phases.flatMap(ph => 
-                      ph.checklist.filter(i => i.assigneeId === member.id && !i.isCompleted)
-                    )
-                  ).length;
-
-                  return (
-                    <div key={member.id} className="group bg-hover border border-border rounded-xl p-5 flex items-start gap-4 hover:border-border transition-colors relative">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-primary font-display font-bold text-sm shrink-0" style={{ backgroundColor: member.color }}>
-                        {member.name.slice(0, 1).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-primary font-medium truncate">{member.name}</p>
-                        <p className="text-muted text-xs mt-0.5">{member.role || 'No role set'}</p>
-                        {member.email && (
-                          <a href={`mailto:${member.email}`} className="text-xs text-accent hover:underline mt-1 block truncate">{member.email}</a>
-                        )}
-                        <p className="text-xs text-muted mt-2">
-                          <span className={activeTasks > 0 ? 'text-accent font-medium' : ''}>{activeTasks}</span> active task{activeTasks !== 1 && 's'}
-                        </p>
-                      </div>
+              {/* Member list */}
+              <div className="flex-1 overflow-y-auto">
+                {safeTeam.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-muted py-12">
+                    <Icons.Team size={28} className="opacity-30 mb-3" />
+                    <p className="text-xs">No team members yet.</p>
+                  </div>
+                ) : (
+                  safeTeam.map((member: TeamMember) => {
+                    const memberTasks = ((safeDb as any).teamTasks as TeamTask[] ?? []).filter((t: TeamTask) => t.assigneeId === member.id);
+                    const activeCnt = memberTasks.filter((t: TeamTask) => !t.isCompleted).length;
+                    const isSelected = selectedMember?.id === member.id;
+                    return (
                       <button
-                        onClick={() => handleDeleteMember(member.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-accent cursor-pointer"
+                        key={member.id}
+                        onClick={() => { setSelectedMember(member); setShowAddTask(false); }}
+                        className={`w-full text-left px-4 py-3.5 border-b border-border flex items-center gap-3 transition-colors cursor-pointer ${
+                          isSelected ? 'bg-hover border-l-2 border-l-accent' : 'hover:bg-hover'
+                        }`}
                       >
-                        <Icons.Close size={14} />
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: member.color }}>
+                          {member.name.slice(0, 1).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-primary text-sm font-medium truncate">{member.name}</p>
+                          <p className="text-muted text-xs truncate">{member.role || 'No role'}</p>
+                        </div>
+                        {activeCnt > 0 && (
+                          <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-0.5 rounded-full shrink-0">{activeCnt}</span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Right: Member Detail Panel */}
+            {selectedMember ? (() => {
+              const memberTasks = ((safeDb as any).teamTasks as TeamTask[] ?? []).filter((t: TeamTask) => t.assigneeId === selectedMember.id);
+              const projectTasks = safeDb.projects.flatMap(p =>
+                p.phases.flatMap(ph =>
+                  ph.checklist
+                    .filter(i => i.assigneeId === selectedMember.id)
+                    .map(i => ({ ...i, projectName: p.name, projectId: p.id, phaseId: ph.id, phaseName: ph.name }))
+                )
+              );
+
+              const filteredTasks = memberTasks.filter((t: TeamTask) =>
+                teamTaskFilter === 'all' ? true :
+                teamTaskFilter === 'done' ? t.isCompleted :
+                !t.isCompleted
+              );
+              const filteredProjectTasks = projectTasks.filter(t =>
+                teamTaskFilter === 'all' ? true :
+                teamTaskFilter === 'done' ? t.isCompleted :
+                !t.isCompleted
+              );
+
+              const PRIORITY_COLORS: Record<string, string> = { urgent: 'text-red-400', normal: 'text-amber-400', low: 'text-muted' };
+              const PRIORITY_LABELS: Record<string, string> = { urgent: 'Urgent', normal: 'Normal', low: 'Low' };
+
+              return (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Member header */}
+                  <div className="px-8 py-5 border-b border-border flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-md" style={{ backgroundColor: selectedMember.color }}>
+                        {selectedMember.name.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div>
+                        <h2 className="font-display text-xl text-primary font-semibold">{selectedMember.name}</h2>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {selectedMember.role && <span className="text-muted text-xs">{selectedMember.role}</span>}
+                          {selectedMember.email && (
+                            <a href={`mailto:${selectedMember.email}`} className="text-xs text-accent hover:underline">{selectedMember.email}</a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => { setShowAddTask(v => !v); }}
+                        className="flex items-center gap-2 bg-accent text-canvas text-sm px-4 py-2 rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer font-medium"
+                      >
+                        <Icons.Plus size={14} />
+                        Assign Task
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMember(selectedMember.id)}
+                        className="text-muted hover:text-red-400 transition-colors cursor-pointer p-2 rounded-lg hover:bg-hover"
+                        title="Remove member"
+                      >
+                        <Icons.Close size={16} />
                       </button>
                     </div>
-                  );
-                })}
+                  </div>
+
+                  {/* Assign task form */}
+                  {showAddTask && (
+                    <div className="mx-8 mt-5 bg-hover border border-border rounded-xl p-5 shrink-0">
+                      <p className="text-xs text-muted uppercase tracking-wider font-semibold mb-4">New Task for {selectedMember.name}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          className="bg-canvas border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors col-span-full"
+                          placeholder="Task title *"
+                          autoFocus
+                          value={newTask.title}
+                          onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))}
+                          onKeyDown={e => { if (e.key === 'Enter') handleAddTask(); if (e.key === 'Escape') setShowAddTask(false); }}
+                        />
+                        <select
+                          className="bg-canvas border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
+                          value={newTask.priority}
+                          onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as 'low' | 'normal' | 'urgent' }))}
+                        >
+                          <option value="low">🟢 Low priority</option>
+                          <option value="normal">🟡 Normal priority</option>
+                          <option value="urgent">🔴 Urgent</option>
+                        </select>
+                        <input
+                          type="date"
+                          className="bg-canvas border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
+                          value={newTask.dueDate}
+                          onChange={e => setNewTask(t => ({ ...t, dueDate: e.target.value }))}
+                        />
+                        <select
+                          className="bg-canvas border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors col-span-full"
+                          value={newTask.projectId}
+                          onChange={e => setNewTask(t => ({ ...t, projectId: e.target.value }))}
+                        >
+                          <option value="">— No linked project —</option>
+                          {safeDb.projects.filter(p => p.status !== 'archived').map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                        <textarea
+                          className="bg-canvas border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors col-span-full resize-none h-16"
+                          placeholder="Notes (optional)"
+                          value={newTask.note}
+                          onChange={e => setNewTask(t => ({ ...t, note: e.target.value }))}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setShowAddTask(false)} className="text-muted text-sm hover:text-primary cursor-pointer px-4 py-2">Cancel</button>
+                        <button
+                          onClick={handleAddTask}
+                          disabled={!newTask.title.trim()}
+                          className="bg-accent text-canvas px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-40"
+                        >Assign Task</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stats bar */}
+                  <div className="px-8 py-4 border-b border-border flex items-center gap-6 shrink-0">
+                    <div className="text-center">
+                      <p className="text-2xl font-display font-bold text-primary">{memberTasks.filter(t => !t.isCompleted).length}</p>
+                      <p className="text-xs text-muted mt-0.5">Active</p>
+                    </div>
+                    <div className="w-px h-8 bg-border" />
+                    <div className="text-center">
+                      <p className="text-2xl font-display font-bold text-primary">{memberTasks.filter(t => t.isCompleted).length}</p>
+                      <p className="text-xs text-muted mt-0.5">Completed</p>
+                    </div>
+                    <div className="w-px h-8 bg-border" />
+                    <div className="text-center">
+                      <p className="text-2xl font-display font-bold text-primary">{projectTasks.filter(t => !t.isCompleted).length}</p>
+                      <p className="text-xs text-muted mt-0.5">Project Tasks</p>
+                    </div>
+                    <div className="ml-auto flex items-center bg-hover border border-border rounded-lg overflow-hidden">
+                      {(['active', 'all', 'done'] as const).map(f => (
+                        <button
+                          key={f}
+                          onClick={() => setTeamTaskFilter(f)}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer capitalize ${
+                            teamTaskFilter === f ? 'bg-primary text-canvas' : 'text-muted hover:text-primary'
+                          }`}
+                        >{f}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Task lists */}
+                  <div className="flex-1 overflow-y-auto p-8 pt-5">
+
+                    {/* Standalone team tasks */}
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs text-muted uppercase tracking-widest font-semibold">Assigned Tasks</h3>
+                        <span className="text-xs text-muted">{filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}</span>
+                      </div>
+
+                      {filteredTasks.length === 0 ? (
+                        <div className="border border-dashed border-border rounded-xl py-8 flex flex-col items-center justify-center text-muted">
+                          <Icons.Team size={22} className="opacity-30 mb-2" />
+                          <p className="text-xs">
+                            {teamTaskFilter === 'done' ? 'No completed tasks yet.' : 'No active tasks. Click "Assign Task" to add one.'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {filteredTasks.map((task: TeamTask) => {
+                            const isOverdue = task.dueDate && !task.isCompleted && new Date(task.dueDate) < new Date();
+                            const linkedProject = task.projectId ? safeDb.projects.find(p => p.id === task.projectId) : null;
+                            return (
+                              <div
+                                key={task.id}
+                                className={`group flex items-start gap-3 p-4 rounded-xl border transition-all ${
+                                  task.isCompleted
+                                    ? 'border-border bg-hover opacity-60'
+                                    : 'border-border bg-card hover:border-accent/40'
+                                }`}
+                              >
+                                <button
+                                  onClick={() => handleToggleTask(task.id, task.isCompleted)}
+                                  className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                    task.isCompleted
+                                      ? 'bg-accent border-accent text-canvas'
+                                      : 'border-border hover:border-accent'
+                                  }`}
+                                >
+                                  {task.isCompleted && <Icons.Check size={10} strokeWidth={3} />}
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm font-medium ${ task.isCompleted ? 'line-through text-muted' : 'text-primary' }`}>{task.title}</p>
+                                  <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                    <span className={`text-xs font-medium ${PRIORITY_COLORS[task.priority]}`}>{PRIORITY_LABELS[task.priority]}</span>
+                                    {task.dueDate && (
+                                      <span className={`text-xs ${ isOverdue ? 'text-red-400' : 'text-muted' }`}>
+                                        {isOverdue ? '⚠️ Overdue · ' : '📅 '}
+                                        {new Date(task.dueDate).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                    {linkedProject && (
+                                      <Link href={`/project?id=${linkedProject.id}`} className="text-xs text-accent hover:underline">📁 {linkedProject.name}</Link>
+                                    )}
+                                  </div>
+                                  {task.note && <p className="text-xs text-muted mt-1.5 italic">{task.note}</p>}
+                                  {task.isCompleted && task.completedAt && (
+                                    <p className="text-xs text-muted/50 mt-1">✓ Done {new Date(task.completedAt).toLocaleDateString()}</p>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteTask(task.id)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-red-400 cursor-pointer p-1 shrink-0"
+                                  title="Delete task"
+                                >
+                                  <Icons.Close size={13} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Project tasks */}
+                    {filteredProjectTasks.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs text-muted uppercase tracking-widest font-semibold">Project Tasks</h3>
+                          <span className="text-xs text-muted">{filteredProjectTasks.length} task{filteredProjectTasks.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {filteredProjectTasks.map((task: any) => (
+                            <div
+                              key={task.id}
+                              className={`group flex items-start gap-3 p-4 rounded-xl border transition-all ${
+                                task.isCompleted
+                                  ? 'border-border bg-hover opacity-60'
+                                  : 'border-border bg-card hover:border-accent/40'
+                              }`}
+                            >
+                              <button
+                                onClick={async () => {
+                                  if (!window.electron) return;
+                                  await window.electron.updateChecklistItem(task.projectId, task.phaseId, task.id, { isCompleted: !task.isCompleted });
+                                  await loadDb();
+                                }}
+                                className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                                  task.isCompleted
+                                    ? 'bg-accent border-accent text-canvas'
+                                    : 'border-border hover:border-accent'
+                                }`}
+                              >
+                                {task.isCompleted && <Icons.Check size={10} strokeWidth={3} />}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium ${ task.isCompleted ? 'line-through text-muted' : 'text-primary' }`}>{task.title}</p>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <Link href={`/project?id=${task.projectId}`} className="text-xs text-accent hover:underline">📁 {task.projectName}</Link>
+                                  <span className="text-xs text-muted">{task.phaseName}</span>
+                                  {task.priority && task.priority !== 'normal' && (
+                                    <span className={`text-xs font-medium ${PRIORITY_COLORS[task.priority]}`}>{PRIORITY_LABELS[task.priority]}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted">
+                <Icons.Team size={40} className="opacity-20 mb-4" />
+                <p className="text-sm">Select a team member to view their tasks</p>
+                {safeTeam.length === 0 && (
+                  <button
+                    onClick={() => setShowAddMember(true)}
+                    className="mt-4 text-xs text-accent hover:underline cursor-pointer"
+                  >Add your first team member →</button>
+                )}
               </div>
             )}
-          </main>
+          </div>
         )}
 
         {/* ── CLIENTS TAB ── */}

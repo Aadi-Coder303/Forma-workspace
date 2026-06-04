@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Client, CommunicationLog } from '@/lib/db';
+import { Client, CommunicationLog } from '@/lib/types';
 import { Icons } from '@/components/ui/icons';
 
 const STATUS_COLORS: Record<string, string> = {
