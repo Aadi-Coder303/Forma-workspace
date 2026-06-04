@@ -10,10 +10,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest]
+    runs-on: macos-latest
     
     steps:
       - name: Checkout code
@@ -31,14 +28,7 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      - name: Build and Publish Electron app (macOS)
-        if: matrix.os == 'macos-latest'
+      - name: Build and Publish Electron app
         run: npx electron-builder --mac --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Publish Electron app (Windows)
-        if: matrix.os == 'windows-latest'
-        run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
