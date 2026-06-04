@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { DBData, Project } from '@/lib/db';
+import { DBData, Project } from '@/lib/types';
 import Link from 'next/link';
 
 function ReportContent() {

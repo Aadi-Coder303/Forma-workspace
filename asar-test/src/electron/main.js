@@ -258,9 +258,12 @@ async function getDb() {
     let dirty = false;
 
     if (!db.templates || !db.projects || (db.projects.length > 0 && !db.projects[0].phases) || !db.invoices || !db.activityLog) {
-      db = { baseDirectory: db.baseDirectory || '', projects: db.projects || [], notes: db.notes || [], team: db.team || [], clients: db.clients || [], templates: db.templates || [], invoices: db.invoices || [], activityLog: db.activityLog || [], todayFocus: db.todayFocus || '' };
+      db = { baseDirectory: db.baseDirectory || '', projects: db.projects || [], notes: db.notes || [], team: db.team || [], teamTasks: db.teamTasks || [], clients: db.clients || [], templates: db.templates || [], invoices: db.invoices || [], activityLog: db.activityLog || [], todayFocus: db.todayFocus || '' };
       dirty = true;
     }
+
+    // Ensure teamTasks exists on older DBs
+    if (!db.teamTasks) { db.teamTasks = []; dirty = true; }
 
     // Seed default templates if none exist
     if (!db.templates || db.templates.length === 0) {
@@ -271,7 +274,7 @@ async function getDb() {
     if (dirty) await saveDb(db);
     return db;
   } catch (error) {
-    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], clients: [], templates: DEFAULT_TEMPLATES, invoices: [], activityLog: [], todayFocus: '' };
+    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], teamTasks: [], clients: [], templates: DEFAULT_TEMPLATES, invoices: [], activityLog: [], todayFocus: '' };
     await saveDb(defaultData);
     return defaultData;
   }
@@ -792,6 +795,51 @@ ipcMain.handle('get-app-version', () => app.getVersion());
   ipcMain.handle('delete-team-member', async (_, memberId) => {
     const db = await getDb();
     db.team = db.team.filter(m => m.id !== memberId);
+    await saveDb(db);
+    return true;
+  });
+
+  // Team Tasks
+  ipcMain.handle('create-team-task', async (_, fields) => {
+    const db = await getDb();
+    if (!db.teamTasks) db.teamTasks = [];
+    const task = {
+      id: crypto.randomUUID(),
+      title: fields.title || 'Untitled Task',
+      assigneeId: fields.assigneeId,
+      isCompleted: false,
+      priority: fields.priority || 'normal',
+      dueDate: fields.dueDate || null,
+      projectId: fields.projectId || null,
+      note: fields.note || '',
+      createdAt: new Date().toISOString(),
+    };
+    db.teamTasks.push(task);
+    const member = db.team.find(m => m.id === fields.assigneeId);
+    logActivity(db, 'Assigned task', `"${task.title}" → ${member ? member.name : 'Unknown'}`);
+    await saveDb(db);
+    return task;
+  });
+
+  ipcMain.handle('update-team-task', async (_, taskId, fields) => {
+    const db = await getDb();
+    if (!db.teamTasks) db.teamTasks = [];
+    const task = db.teamTasks.find(t => t.id === taskId);
+    if (!task) return false;
+    const wasCompleted = task.isCompleted;
+    Object.assign(task, fields);
+    if (fields.isCompleted && !wasCompleted) {
+      task.completedAt = new Date().toISOString();
+      logActivity(db, 'Completed team task', `"${task.title}"`);
+    }
+    await saveDb(db);
+    return task;
+  });
+
+  ipcMain.handle('delete-team-task', async (_, taskId) => {
+    const db = await getDb();
+    if (!db.teamTasks) db.teamTasks = [];
+    db.teamTasks = db.teamTasks.filter(t => t.id !== taskId);
     await saveDb(db);
     return true;
   });

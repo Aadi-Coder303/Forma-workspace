@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { DBData, Project, ProjectPhase, ChecklistItem } from '@/lib/db';
+import { DBData, Project, ProjectPhase, ChecklistItem } from '@/lib/types';
 import Link from 'next/link';
 import { Icons } from '@/components/ui/icons';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';

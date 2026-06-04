@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Icons } from './ui/icons';
-import { Client, ChecklistTemplate, ProjectPhase } from '@/lib/db';
+import { Client, ChecklistTemplate, ProjectPhase } from '@/lib/types';
 
 type WizardProps = {
   clients: Client[];

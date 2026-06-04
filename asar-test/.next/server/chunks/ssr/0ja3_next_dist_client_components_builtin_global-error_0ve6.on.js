@@ -1,0 +1,3 @@
+module.exports=[51454,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(76262);a.n(d("[project]/Documents/antigravity/dazzling-hubble/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},46777,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(76262);a.n(d("[project]/Documents/antigravity/dazzling-hubble/node_modules/next/dist/client/components/builtin/global-error.js"))},89251,a=>{"use strict";a.i(51454);var b=a.i(46777);a.n(b)},27646,a=>{a.n(a.i(89251))}];
+
+//# sourceMappingURL=0ja3_next_dist_client_components_builtin_global-error_0ve6.on.js.map
