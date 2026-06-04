@@ -1118,7 +1118,7 @@ export default function DashboardClient() {
                 <div className="bg-hover border border-border rounded-2xl divide-y divide-[rgba(244,242,238,0.06)]">
                   <div className="p-5 flex items-center justify-between">
                     <p className="text-muted text-sm">Version</p>
-                    <p className="text-primary text-sm font-mono">1.0.0</p>
+                    <p className="text-primary text-sm font-mono">{appVersion || '1.0.0'}</p>
                   </div>
                   <div className="p-5 flex items-center justify-between">
                     <p className="text-muted text-sm">App</p>
