@@ -74,6 +74,7 @@ export default function DashboardClient() {
 
   // Archive state
   const [showArchived, setShowArchived] = useState(false);
+  const [hasSynced, setHasSynced] = useState(false);
 
   // Updater state
   const [appVersion, setAppVersion] = useState('');
@@ -99,6 +100,11 @@ export default function DashboardClient() {
     if (!localStorage.getItem('forma-tour-done')) {
       setShowTour(true);
     }
+    
+    if (localStorage.getItem('forma-has-synced') === '1') {
+      setHasSynced(true);
+    }
+
     loadDb();
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input or textarea
@@ -254,6 +260,8 @@ export default function DashboardClient() {
       // @ts-ignore
       const addedCount = await window.electron.syncLocalDirectory();
       await loadDb(); // reload db to show new projects
+      localStorage.setItem('forma-has-synced', '1');
+      setHasSynced(true);
       alert(`Successfully synced and imported ${addedCount} project(s)!`);
     } catch (err: any) {
       alert('Failed to sync directory: ' + err.message);
@@ -541,46 +549,48 @@ export default function DashboardClient() {
                 </div>
               </div>
 
-              {/* Workspace Dir */}
-              <div className="bg-hover border border-border rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-2 text-primary">
-                  <Icons.Projects size={18} className="text-muted" />
-                  <h2 className="font-display font-medium text-lg">Local Directory</h2>
+              {/* Workspace Dir (Only show if not synced) */}
+              {!hasSynced && (
+                <div className="bg-hover border border-border rounded-2xl p-6">
+                  <div className="flex items-center gap-2 mb-2 text-primary">
+                    <Icons.Projects size={18} className="text-muted" />
+                    <h2 className="font-display font-medium text-lg">Local Directory</h2>
+                  </div>
+                  <p className="text-muted text-sm mb-4">Where your project folders live on disk.</p>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors font-mono"
+                      value={dirInput}
+                      onChange={e => setDirInput(e.target.value)}
+                      placeholder="/Users/you/Projects"
+                    />
+                    <button
+                      onClick={handlePickFolder}
+                      title="Browse for folder"
+                      className="bg-hover hover:bg-hover text-primary border border-border rounded-lg px-3 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Icons.FolderOpen size={15} />
+                      Browse
+                    </button>
+                    <button
+                      onClick={handleSaveDir}
+                      disabled={isPending}
+                      className="bg-hover hover:bg-hover text-primary border border-border rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleSyncLocalDirectory}
+                      disabled={isPending}
+                      title="Scan this directory and auto-import missing folders as projects"
+                      className="bg-accent hover:bg-[#a65123] text-canvas border border-transparent rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Icons.FolderOpen size={15} />
+                      Sync
+                    </button>
+                  </div>
                 </div>
-                <p className="text-muted text-sm mb-4">Where your project folders live on disk.</p>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors font-mono"
-                    value={dirInput}
-                    onChange={e => setDirInput(e.target.value)}
-                    placeholder="/Users/you/Projects"
-                  />
-                  <button
-                    onClick={handlePickFolder}
-                    title="Browse for folder"
-                    className="bg-hover hover:bg-hover text-primary border border-border rounded-lg px-3 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Icons.FolderOpen size={15} />
-                    Browse
-                  </button>
-                  <button
-                    onClick={handleSaveDir}
-                    disabled={isPending}
-                    className="bg-hover hover:bg-hover text-primary border border-border rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleSyncLocalDirectory}
-                    disabled={isPending}
-                    title="Scan this directory and auto-import missing folders as projects"
-                    className="bg-accent hover:bg-[#a65123] text-canvas border border-transparent rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Icons.FolderOpen size={15} />
-                    Sync
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="mb-6 flex items-center justify-between">
