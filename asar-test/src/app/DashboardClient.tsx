@@ -64,6 +64,8 @@ export default function DashboardClient() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
 
   // Command Palette state
   const [searchQuery, setSearchQuery] = useState('');
@@ -233,18 +235,16 @@ export default function DashboardClient() {
   };
 
   const handleCreateTemplate = async () => {
-    if (!window.electron) return;
-    const name = prompt('Template Name (e.g. Web App Starter):');
-    if (!name) return;
-    
-    // Example default phases
+    if (!window.electron || !newTemplateName.trim()) return;
     const defaultPhases = [
       { name: 'Discovery', items: [{ title: 'Kickoff Call', subtasks: [] }] },
       { name: 'Design', items: [{ title: 'Wireframes', subtasks: [] }] },
-      { name: 'Development', items: [{ title: 'Setup Repo', subtasks: [] }] }
+      { name: 'Development', items: [{ title: 'Setup Repo', subtasks: [] }] },
+      { name: 'Launch', items: [{ title: 'Go Live', subtasks: [] }] }
     ];
-    
-    await window.electron.createTemplate({ name, phases: defaultPhases });
+    await window.electron.createTemplate({ name: newTemplateName.trim(), phases: defaultPhases });
+    setNewTemplateName('');
+    setShowNewTemplate(false);
     await loadDb();
   };
 
@@ -1113,20 +1113,65 @@ export default function DashboardClient() {
                   <div className="p-5 border-b border-border flex justify-between items-center">
                     <h3 className="text-primary font-medium">Checklist Templates</h3>
                     <button
-                      onClick={handleCreateTemplate}
-                      className="text-xs bg-card text-primary px-3 py-1.5 rounded-lg font-medium"
+                      onClick={() => setShowNewTemplate(v => !v)}
+                      className="text-xs bg-card text-primary px-3 py-1.5 rounded-lg font-medium hover:opacity-80 transition-opacity cursor-pointer"
                     >
                       + New Template
                     </button>
                   </div>
+
+                  {showNewTemplate && (
+                    <div className="px-5 pt-4 pb-2 border-b border-border flex gap-2 items-center">
+                      <input
+                        autoFocus
+                        className="flex-1 bg-hover border border-border rounded-lg px-3 py-2 text-sm text-primary outline-none focus:border-accent transition-colors"
+                        placeholder="Template name (e.g. SaaS Launch)"
+                        value={newTemplateName}
+                        onChange={e => setNewTemplateName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleCreateTemplate();
+                          if (e.key === 'Escape') { setShowNewTemplate(false); setNewTemplateName(''); }
+                        }}
+                      />
+                      <button
+                        onClick={handleCreateTemplate}
+                        disabled={!newTemplateName.trim()}
+                        className="bg-accent text-canvas px-4 py-2 rounded-lg text-xs font-medium hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-40"
+                      >
+                        Create
+                      </button>
+                      <button
+                        onClick={() => { setShowNewTemplate(false); setNewTemplateName(''); }}
+                        className="text-muted hover:text-primary text-xs px-2 py-2 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
                   <div className="p-5 flex flex-col gap-3">
-                    {safeDb.templates?.length === 0 ? (
+                    {!safeDb.templates || safeDb.templates.length === 0 ? (
                       <p className="text-muted text-sm">No templates defined.</p>
                     ) : (
-                      safeDb.templates?.map(t => (
-                        <div key={t.id} className="flex justify-between items-center text-sm border border-border rounded-lg p-3">
-                          <span className="text-primary">{t.name}</span>
-                          <span className="text-muted text-xs">{t.phases.length} phases</span>
+                      safeDb.templates.map(t => (
+                        <div key={t.id} className="flex justify-between items-center text-sm border border-border rounded-lg p-3 group">
+                          <div>
+                            <span className="text-primary font-medium">{t.name}</span>
+                            <span className="text-muted text-xs ml-3">{t.phases.length} phases · {t.phases.reduce((acc, p) => acc + (p.items?.length || 0), 0)} tasks</span>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              if (!window.electron) return;
+                              if (confirm(`Delete template "${t.name}"?`)) {
+                                await window.electron.deleteTemplate(t.id);
+                                await loadDb();
+                              }
+                            }}
+                            className="opacity-0 group-hover:opacity-100 text-muted hover:text-accent transition-all cursor-pointer"
+                            title="Delete template"
+                          >
+                            <Icons.Close size={13} />
+                          </button>
                         </div>
                       ))
                     )}

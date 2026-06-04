@@ -253,6 +253,7 @@ export default function DashboardClient() {
     if (!window.electron) return;
     setIsPending(true);
     try {
+      // @ts-ignore
       const addedCount = await window.electron.syncLocalDirectory();
       await loadDb(); // reload db to show new projects
       alert(`Successfully synced and imported ${addedCount} project(s)!`);
@@ -577,7 +578,7 @@ export default function DashboardClient() {
                     title="Scan this directory and auto-import missing folders as projects"
                     className="bg-accent hover:bg-[#a65123] text-canvas border border-transparent rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
                   >
-                    <Icons.Refresh size={15} />
+                    <Icons.FolderOpen size={15} />
                     Sync
                   </button>
                 </div>

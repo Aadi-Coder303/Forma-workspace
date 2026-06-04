@@ -13,18 +13,265 @@ protocol.registerSchemesAsPrivileged([
 
 const DB_FILE = path.join(app.getPath('userData'), 'projects.json');
 
+const DEFAULT_TEMPLATES = [
+  {
+    id: 'tpl-web-design',
+    name: 'Web Design Project',
+    phases: [
+      { name: 'Discovery', items: [
+        { title: 'Kickoff call with client', subtasks: [] },
+        { title: 'Define project scope & goals', subtasks: [] },
+        { title: 'Gather brand assets & references', subtasks: [] },
+        { title: 'Competitor analysis', subtasks: [] }
+      ]},
+      { name: 'Design', items: [
+        { title: 'Wireframes (low-fidelity)', subtasks: [] },
+        { title: 'Mood board / style direction', subtasks: [] },
+        { title: 'Hi-fi mockups (desktop)', subtasks: [] },
+        { title: 'Hi-fi mockups (mobile)', subtasks: [] },
+        { title: 'Client design approval', subtasks: [] }
+      ]},
+      { name: 'Development', items: [
+        { title: 'Set up repo & environment', subtasks: [] },
+        { title: 'Build core page templates', subtasks: [] },
+        { title: 'Responsive implementation', subtasks: [] },
+        { title: 'CMS / content integration', subtasks: [] },
+        { title: 'Cross-browser QA', subtasks: [] }
+      ]},
+      { name: 'Launch', items: [
+        { title: 'Staging review with client', subtasks: [] },
+        { title: 'SEO meta & sitemap setup', subtasks: [] },
+        { title: 'Go-live deployment', subtasks: [] },
+        { title: 'Post-launch check & handoff docs', subtasks: [] }
+      ]}
+    ]
+  },
+  {
+    id: 'tpl-mobile-app',
+    name: 'Mobile App Development',
+    phases: [
+      { name: 'Discovery & Planning', items: [
+        { title: 'Define app concept & user personas', subtasks: [] },
+        { title: 'Feature list & MVP scope', subtasks: [] },
+        { title: 'Tech stack decision', subtasks: [] }
+      ]},
+      { name: 'Design', items: [
+        { title: 'User flow diagrams', subtasks: [] },
+        { title: 'Wireframes (all screens)', subtasks: [] },
+        { title: 'Hi-fi UI kit', subtasks: [] },
+        { title: 'Prototype & user testing', subtasks: [] }
+      ]},
+      { name: 'Development', items: [
+        { title: 'Project scaffolding & CI setup', subtasks: [] },
+        { title: 'Authentication flow', subtasks: [] },
+        { title: 'Core feature development', subtasks: [] },
+        { title: 'API integrations', subtasks: [] },
+        { title: 'Push notifications', subtasks: [] }
+      ]},
+      { name: 'QA & Release', items: [
+        { title: 'Internal testing (iOS + Android)', subtasks: [] },
+        { title: 'Beta testing (TestFlight / Play Console)', subtasks: [] },
+        { title: 'App Store submission', subtasks: [] },
+        { title: 'Play Store submission', subtasks: [] }
+      ]}
+    ]
+  },
+  {
+    id: 'tpl-brand-identity',
+    name: 'Brand Identity Design',
+    phases: [
+      { name: 'Discovery', items: [
+        { title: 'Brand questionnaire', subtasks: [] },
+        { title: 'Competitor brand audit', subtasks: [] },
+        { title: 'Moodboard creation', subtasks: [] }
+      ]},
+      { name: 'Concept', items: [
+        { title: 'Logo concepts (3 directions)', subtasks: [] },
+        { title: 'Colour palette selection', subtasks: [] },
+        { title: 'Typography pairing', subtasks: [] },
+        { title: 'Client concept presentation', subtasks: [] }
+      ]},
+      { name: 'Refinement', items: [
+        { title: 'Logo revisions (Round 1)', subtasks: [] },
+        { title: 'Logo revisions (Round 2)', subtasks: [] },
+        { title: 'Final logo approval', subtasks: [] }
+      ]},
+      { name: 'Deliverables', items: [
+        { title: 'Brand guidelines document', subtasks: [] },
+        { title: 'Export logo in all formats', subtasks: [] },
+        { title: 'Business card & stationery design', subtasks: [] },
+        { title: 'Social media kit', subtasks: [] }
+      ]}
+    ]
+  },
+  {
+    id: 'tpl-seo-campaign',
+    name: 'SEO & Content Campaign',
+    phases: [
+      { name: 'Audit', items: [
+        { title: 'Technical SEO audit', subtasks: [] },
+        { title: 'Keyword research & gap analysis', subtasks: [] },
+        { title: 'Backlink profile review', subtasks: [] }
+      ]},
+      { name: 'Strategy', items: [
+        { title: 'Content calendar (3 months)', subtasks: [] },
+        { title: 'On-page optimisation plan', subtasks: [] },
+        { title: 'Link-building outreach list', subtasks: [] }
+      ]},
+      { name: 'Execution', items: [
+        { title: 'Optimise existing pages', subtasks: [] },
+        { title: 'Publish month-1 content', subtasks: [] },
+        { title: 'Outreach & guest posts', subtasks: [] }
+      ]},
+      { name: 'Reporting', items: [
+        { title: 'Monthly ranking report', subtasks: [] },
+        { title: 'Traffic & conversion analysis', subtasks: [] },
+        { title: 'Strategy review & next steps', subtasks: [] }
+      ]}
+    ]
+  },
+  {
+    id: 'tpl-freelance-design',
+    name: 'Freelance Design Workflow',
+    phases: [
+      { name: '1 · Onboarding Document', items: [
+        { title: 'Collect brand information', subtasks: [] },
+        { title: 'Define target audience', subtasks: [] },
+        { title: 'Research competitors', subtasks: [] },
+        { title: 'Gather reference / inspiration links', subtasks: [] },
+        { title: 'Note colour preferences', subtasks: [] }
+      ]},
+      { name: '2 · Scope of Work', items: [
+        { title: 'Write exact deliverables list before starting', subtasks: [] },
+        { title: 'Confirm: Logo', subtasks: [] },
+        { title: 'Confirm: Colour palette', subtasks: [] },
+        { title: 'Confirm: Typography system', subtasks: [] },
+        { title: 'Confirm: Brand guidelines', subtasks: [] },
+        { title: 'Confirm: Social media templates', subtasks: [] },
+        { title: 'Note: anything outside scope = extra service', subtasks: [] }
+      ]},
+      { name: '3 · Freelance Agreement', items: [
+        { title: 'Scope of work documented', subtasks: [] },
+        { title: 'Timeline & milestones agreed', subtasks: [] },
+        { title: 'Number of revisions included', subtasks: [] },
+        { title: 'Payment structure signed off', subtasks: [] },
+        { title: 'File ownership clause included', subtasks: [] },
+        { title: 'Cancellation terms included', subtasks: [] }
+      ]},
+      { name: '4 · Advance Payment', items: [
+        { title: 'Advance payment received before starting work', subtasks: [] },
+        { title: 'Payment structure confirmed (50/50 or 30/40/30)', subtasks: [] }
+      ]},
+      { name: '5 · File Delivery', items: [
+        { title: 'Export final PNG', subtasks: [] },
+        { title: 'Export final JPG', subtasks: [] },
+        { title: 'Export final PDF', subtasks: [] },
+        { title: 'Clarify editable files policy (AI / PSD / Figma)', subtasks: [] }
+      ]},
+      { name: '6 · Invoice', items: [
+        { title: 'Your name / brand + GST + bank details on invoice', subtasks: [] },
+        { title: 'Client name + GST & address on invoice', subtasks: [] },
+        { title: 'Project description added', subtasks: [] },
+        { title: 'Payment amount & date filled in', subtasks: [] },
+        { title: 'Invoice number assigned', subtasks: [] }
+      ]},
+      { name: '7 · Kill Fee (Cancellation)', items: [
+        { title: 'Kill fee clause added to agreement', subtasks: [] },
+        { title: 'Rule: concept stage cancelled → 30% retained', subtasks: [] },
+        { title: 'Rule: mid-project cancelled → 50% retained', subtasks: [] }
+      ]}
+    ]
+  },
+  {
+    id: 'tpl-pre-launch',
+    name: '🚀 Pre-Launch Checklist',
+    phases: [
+      { name: '⚖️ Legal', items: [
+        { title: 'Privacy Policy published', subtasks: [] },
+        { title: 'Terms & Conditions published', subtasks: [] },
+        { title: 'Cookie consent banner live', subtasks: [] }
+      ]},
+      { name: '🔐 Auth & Security', items: [
+        { title: 'Signup / login tested', subtasks: [] },
+        { title: 'Email verification working', subtasks: [] },
+        { title: 'Password reset working', subtasks: [] },
+        { title: 'OAuth working (if added)', subtasks: [] },
+        { title: 'Rate limiting on auth routes', subtasks: [] },
+        { title: 'No API keys in frontend code', subtasks: [] },
+        { title: 'ENV variables not exposed', subtasks: [] },
+        { title: 'HTTPS / SSL active', subtasks: [] },
+        { title: 'CORS configured', subtasks: [] }
+      ]},
+      { name: '💳 Payment', items: [
+        { title: 'Success + failure flow tested', subtasks: [] },
+        { title: 'Subscription upgrade / downgrade / cancel tested', subtasks: [] }
+      ]},
+      { name: '📊 Analytics', items: [
+        { title: 'Page tracking set up', subtasks: [] },
+        { title: 'User event tracking set up', subtasks: [] }
+      ]},
+      { name: '⚡ Performance', items: [
+        { title: 'Lighthouse score checked', subtasks: [] },
+        { title: 'Images optimised', subtasks: [] },
+        { title: 'No console errors', subtasks: [] }
+      ]},
+      { name: '📱 UI & Device', items: [
+        { title: 'Mobile responsive', subtasks: [] },
+        { title: 'Tested on Safari + Chrome', subtasks: [] },
+        { title: 'No broken links', subtasks: [] },
+        { title: 'No placeholder / Lorem Ipsum text', subtasks: [] },
+        { title: 'Custom 404 page', subtasks: [] },
+        { title: 'Favicon set', subtasks: [] },
+        { title: 'OG tags + social preview image', subtasks: [] }
+      ]},
+      { name: '📧 Emails', items: [
+        { title: 'Transactional emails working', subtasks: [] },
+        { title: 'Not landing in spam', subtasks: [] },
+        { title: 'Unsubscribe in marketing emails', subtasks: [] }
+      ]},
+      { name: '📈 Marketing', items: [
+        { title: 'Submitted to Google Search Console', subtasks: [] },
+        { title: 'SEO basics checked', subtasks: [] }
+      ]},
+      { name: '🔁 Feedback', items: [
+        { title: 'Support / contact email set up', subtasks: [] },
+        { title: 'Bug report option added', subtasks: [] }
+      ]},
+      { name: '🛡️ Monitoring', items: [
+        { title: 'Uptime monitoring set up', subtasks: [] },
+        { title: 'Error logging (Sentry etc.) configured', subtasks: [] },
+        { title: 'DB backups configured', subtasks: [] }
+      ]},
+      { name: '🌐 Domain & Deploy', items: [
+        { title: 'Custom domain connected', subtasks: [] },
+        { title: 'www redirect working', subtasks: [] },
+        { title: 'CI/CD pipeline tested', subtasks: [] }
+      ]}
+    ]
+  }
+];
+
 async function getDb() {
   try {
     const data = await fs.readFile(DB_FILE, 'utf-8');
     let db = JSON.parse(data);
+    let dirty = false;
 
     if (!db.templates || !db.projects || (db.projects.length > 0 && !db.projects[0].phases) || !db.invoices || !db.activityLog) {
       db = { baseDirectory: db.baseDirectory || '', projects: db.projects || [], notes: db.notes || [], team: db.team || [], clients: db.clients || [], templates: db.templates || [], invoices: db.invoices || [], activityLog: db.activityLog || [], todayFocus: db.todayFocus || '' };
-      await saveDb(db);
+      dirty = true;
     }
+
+    // Seed default templates if none exist
+    if (!db.templates || db.templates.length === 0) {
+      db.templates = DEFAULT_TEMPLATES;
+      dirty = true;
+    }
+
+    if (dirty) await saveDb(db);
     return db;
   } catch (error) {
-    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], clients: [], templates: [], invoices: [], activityLog: [], todayFocus: '' };
+    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], clients: [], templates: DEFAULT_TEMPLATES, invoices: [], activityLog: [], todayFocus: '' };
     await saveDb(defaultData);
     return defaultData;
   }
