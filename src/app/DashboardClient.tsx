@@ -183,8 +183,6 @@ export default function DashboardClient() {
         }),
         window.electron.updater.onEvent('updater:update-available', () => {
           setUpdaterStatus('available');
-          // Let's just download it right away since the user wanted it
-          window.electron.updater.download();
         }),
         window.electron.updater.onEvent('updater:update-not-available', () => {
           setUpdaterStatus('not-available');
@@ -1069,7 +1067,16 @@ export default function DashboardClient() {
                       <div className="text-muted text-xs flex items-center gap-2">
                         <Icons.Search size={14} className="animate-pulse" /> Checking...
                       </div>
-                    ) : updaterStatus === 'downloading' || updaterStatus === 'available' ? (
+                    ) : updaterStatus === 'available' ? (
+                      <a 
+                        href="https://github.com/Aadi-Coder303/Forma-workspace/releases/latest"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-accent text-canvas border border-border rounded-lg px-4 py-2 text-xs font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                      >
+                        Download Update
+                      </a>
+                    ) : updaterStatus === 'downloading' ? (
                       <div className="flex items-center gap-3">
                         <div className="w-24 h-1.5 bg-sidebar rounded-full overflow-hidden">
                           <div className="h-full bg-accent transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
