@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, net, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, Menu, shell, Notification } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs/promises');
@@ -258,7 +258,7 @@ async function getDb() {
     let dirty = false;
 
     if (!db.templates || !db.projects || (db.projects.length > 0 && !db.projects[0].phases) || !db.invoices || !db.activityLog) {
-      db = { baseDirectory: db.baseDirectory || '', projects: db.projects || [], notes: db.notes || [], team: db.team || [], teamTasks: db.teamTasks || [], clients: db.clients || [], templates: db.templates || [], invoices: db.invoices || [], activityLog: db.activityLog || [], todayFocus: db.todayFocus || '' };
+      db = { baseDirectory: db.baseDirectory || '', projects: db.projects || [], notes: db.notes || [], team: db.team || [], teamTasks: db.teamTasks || [], clients: db.clients || [], templates: db.templates || [], invoices: db.invoices || [], activityLog: db.activityLog || [], todayFocus: db.todayFocus || '', lastNotificationDate: db.lastNotificationDate || null };
       dirty = true;
     }
 
@@ -305,6 +305,72 @@ function logActivity(db, action, details = '') {
   if (db.activityLog.length > 100) {
     db.activityLog = db.activityLog.slice(0, 100);
   }
+}
+
+async function checkUpcomingDeadlines(db) {
+  if (!Notification.isSupported()) return;
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  
+  if (db.lastNotificationDate === todayStr) {
+    return;
+  }
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  let notifiedCount = 0;
+
+  const notifyItem = (title, body) => {
+    new Notification({
+      title,
+      body,
+      silent: false
+    }).show();
+    notifiedCount++;
+    
+    // Slight delay so notifications don't overlap completely on some OSs
+    return new Promise(resolve => setTimeout(resolve, 500));
+  };
+
+  // 1. Projects
+  for (const p of db.projects) {
+    if (p.status !== 'completed' && p.status !== 'archived' && p.deadline) {
+      try {
+        const deadlineStr = new Date(p.deadline).toISOString().split('T')[0];
+        if (deadlineStr === todayStr) await notifyItem('Project Due Today', `"${p.name}" is due today.`);
+        else if (deadlineStr === tomorrowStr) await notifyItem('Project Due Tomorrow', `"${p.name}" is due tomorrow.`);
+      } catch (e) {} // ignore invalid dates
+    }
+  }
+
+  // 2. Invoices
+  for (const inv of db.invoices) {
+    if (inv.status !== 'paid' && inv.dueDate) {
+      try {
+        const dueStr = new Date(inv.dueDate).toISOString().split('T')[0];
+        if (dueStr === todayStr) await notifyItem('Invoice Due Today', `Invoice "${inv.title}" is due today.`);
+        else if (dueStr === tomorrowStr) await notifyItem('Invoice Due Tomorrow', `Invoice "${inv.title}" is due tomorrow.`);
+      } catch (e) {}
+    }
+  }
+
+  // 3. Team Tasks
+  for (const task of db.teamTasks) {
+    if (!task.isCompleted && task.dueDate) {
+      try {
+        const dueStr = new Date(task.dueDate).toISOString().split('T')[0];
+        if (dueStr === todayStr) await notifyItem('Task Due Today', `"${task.title}" is due today.`);
+        else if (dueStr === tomorrowStr) await notifyItem('Task Due Tomorrow', `"${task.title}" is due tomorrow.`);
+      } catch (e) {}
+    }
+  }
+
+  // Mark as notified for today
+  db.lastNotificationDate = todayStr;
+  await saveDb(db);
 }
 
 function createWindow() {
@@ -541,6 +607,24 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+
+  // Check deadlines on boot and periodically
+  setTimeout(async () => {
+    try {
+      const db = await getDb();
+      await checkUpcomingDeadlines(db);
+    } catch (e) {
+      console.error('Failed to check deadlines', e);
+    }
+  }, 3000); // Wait 3s for app to settle
+
+  // Check every 4 hours
+  setInterval(async () => {
+    try {
+      const db = await getDb();
+      await checkUpcomingDeadlines(db);
+    } catch (e) {}
+  }, 4 * 60 * 60 * 1000);
 });
 
 // IPC: Auto Updater
@@ -772,7 +856,7 @@ ipcMain.handle('get-app-version', () => app.getVersion());
       // Stop timer
       const start = new Date(item.timeStartedAt).getTime();
       const now = new Date().getTime();
-      const elapsedMins = Math.round((now - start) / 60000);
+      const elapsedMins = Math.max(1, Math.round((now - start) / 60000));
       item.timeLogged = (item.timeLogged || 0) + elapsedMins;
       item.timeIsRunning = false;
       item.timeStartedAt = undefined;

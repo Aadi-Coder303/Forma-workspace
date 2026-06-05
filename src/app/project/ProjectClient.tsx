@@ -44,7 +44,7 @@ function SortablePhase({ phase, children }: { phase: ProjectPhase, children: Rea
   );
 }
 
-function SortableItem({ item, project, phase, handleToggleItem, loadProject }: any) {
+function SortableItem({ item, project, phase, handleToggleItem, loadProject, onManualTimePrompt }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { type: 'Item', item, phaseId: phase.id }
@@ -99,13 +99,9 @@ function SortableItem({ item, project, phase, handleToggleItem, loadProject }: a
                 {item.timeIsRunning ? <Icons.StopCircle size={14} /> : <Icons.PlayCircle size={14} />}
               </button>
               <button
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  const mins = prompt('Enter manual time to add (in minutes):', '30');
-                  if (mins && !isNaN(parseInt(mins)) && window.electron) {
-                    await window.electron.addManualTime(project.id, phase.id, item.id, parseInt(mins));
-                    loadProject();
-                  }
+                  onManualTimePrompt(phase.id, item.id);
                 }}
                 className="p-1 rounded hover:bg-hover text-muted hover:text-primary transition-colors"
                 title="Add Time Manually"
@@ -126,6 +122,10 @@ export default function ProjectClient() {
   const [db, setDb] = useState<DBData | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState('');
+  
+  // Custom prompt state for adding time
+  const [timePrompt, setTimePrompt] = useState<{ phaseId: string, itemId: string } | null>(null);
+  const [timeInput, setTimeInput] = useState('30');
 
   const loadProject = async () => {
     if (typeof window !== 'undefined' && window.electron && projectId) {
@@ -410,7 +410,7 @@ export default function ProjectClient() {
                   <SortableContext items={phase.checklist.map(i => i.id)} strategy={verticalListSortingStrategy}>
                     <div className="flex flex-col gap-3 min-h-[50px]">
                       {phase.checklist.map(item => (
-                        <SortableItem key={item.id} item={item} project={project} phase={phase} handleToggleItem={handleToggleItem} loadProject={loadProject} />
+                        <SortableItem key={item.id} item={item} project={project} phase={phase} handleToggleItem={handleToggleItem} loadProject={loadProject} onManualTimePrompt={(phId: string, iId: string) => setTimePrompt({ phaseId: phId, itemId: iId })} />
                       ))}
                     </div>
                   </SortableContext>
@@ -432,6 +432,58 @@ export default function ProjectClient() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Manual Time Prompt Modal */}
+      {timePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-canvas border border-border rounded-xl shadow-2xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display font-medium text-lg mb-2">Add Manual Time</h3>
+            <p className="text-sm text-muted mb-4">Enter time to add (in minutes):</p>
+            <input
+              autoFocus
+              type="number"
+              value={timeInput}
+              onChange={(e) => setTimeInput(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') {
+                  const mins = parseInt(timeInput);
+                  if (!isNaN(mins) && mins > 0 && window.electron && project) {
+                    await window.electron.addManualTime(project.id, timePrompt.phaseId, timePrompt.itemId, mins);
+                    loadProject();
+                  }
+                  setTimePrompt(null);
+                  setTimeInput('30');
+                } else if (e.key === 'Escape') {
+                  setTimePrompt(null);
+                }
+              }}
+              className="w-full bg-hover border border-border rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent mb-6"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setTimePrompt(null)}
+                className="px-4 py-2 text-sm font-medium text-muted hover:text-primary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const mins = parseInt(timeInput);
+                  if (!isNaN(mins) && mins > 0 && window.electron && project) {
+                    await window.electron.addManualTime(project.id, timePrompt.phaseId, timePrompt.itemId, mins);
+                    loadProject();
+                  }
+                  setTimePrompt(null);
+                  setTimeInput('30');
+                }}
+                className="px-4 py-2 text-sm font-medium bg-accent text-canvas rounded-lg hover:bg-accent/90 transition-colors"
+              >
+                Add Time
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

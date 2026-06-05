@@ -221,9 +221,13 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
       {/* ── Overlay backdrop with spotlight hole ── */}
       {spotlight ? (
         <>
-          {/* Four dark panels around the spotlight */}
-          <div className="absolute inset-0 pointer-events-none backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.5)' }} />
-          {/* Spotlight cutout — transparent window */}
+          {/* Four backdrop-blur panels around the spotlight to prevent blurring the target */}
+          <div className="absolute pointer-events-none backdrop-blur-sm" style={{ top: 0, left: 0, right: 0, height: Math.max(0, spotlight.top), transition: 'all 0.3s ease', opacity: visible ? 1 : 0 }} />
+          <div className="absolute pointer-events-none backdrop-blur-sm" style={{ top: spotlight.top + spotlight.height, left: 0, right: 0, bottom: 0, transition: 'all 0.3s ease', opacity: visible ? 1 : 0 }} />
+          <div className="absolute pointer-events-none backdrop-blur-sm" style={{ top: Math.max(0, spotlight.top), left: 0, width: Math.max(0, spotlight.left), height: spotlight.height, transition: 'all 0.3s ease', opacity: visible ? 1 : 0 }} />
+          <div className="absolute pointer-events-none backdrop-blur-sm" style={{ top: Math.max(0, spotlight.top), left: spotlight.left + spotlight.width, right: 0, height: spotlight.height, transition: 'all 0.3s ease', opacity: visible ? 1 : 0 }} />
+          
+          {/* Spotlight cutout — transparent window that creates the dark shadow */}
           <div
             className="absolute pointer-events-none rounded-2xl"
             style={{
@@ -231,7 +235,7 @@ export default function WalkthroughOverlay({ onClose, onTabChange }: Props) {
               left:   spotlight.left,
               width:  spotlight.width,
               height: spotlight.height,
-              boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+              boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
               border: '2px solid var(--accent)',
               transition: 'all 0.3s ease',
               opacity: visible ? 1 : 0,
