@@ -9,6 +9,7 @@ import ClientsTab from '@/components/ClientsTab';
 import WalkthroughOverlay from '@/components/WalkthroughOverlay';
 import NewProjectWizard from '@/components/NewProjectWizard';
 import InvoicesTab from '@/components/InvoicesTab';
+import LegalModal from '@/components/LegalModal';
 import { useTheme } from "next-themes";
 
 // ─── Tab types ───────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ export default function DashboardClient() {
   // Today state
   const [todayFocus, setTodayFocus] = useState('');
   const [focusSaved, setFocusSaved] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | 'data' | null>(null);
 
   // Archive state
   const [showArchived, setShowArchived] = useState(false);
@@ -1475,6 +1477,34 @@ export default function DashboardClient() {
                 </div>
               </section>
 
+              {/* Legal & Privacy */}
+              <section className="mb-10">
+                <h3 className="text-xs text-muted uppercase tracking-widest font-semibold mb-4">Legal & Privacy</h3>
+                <div className="bg-hover border border-border rounded-2xl divide-y divide-[rgba(244,242,238,0.06)]">
+                  <div className="p-5 flex items-center justify-between group cursor-pointer hover:bg-hover/80 transition-colors" onClick={() => setLegalDoc('terms')}>
+                    <div>
+                      <p className="text-primary text-sm font-medium">Terms of Use</p>
+                      <p className="text-muted text-xs mt-0.5">Rules and guidelines for using Forma Workspace</p>
+                    </div>
+                    <Icons.ChevronRight size={16} className="text-muted group-hover:text-accent transition-colors" />
+                  </div>
+                  <div className="p-5 flex items-center justify-between group cursor-pointer hover:bg-hover/80 transition-colors" onClick={() => setLegalDoc('privacy')}>
+                    <div>
+                      <p className="text-primary text-sm font-medium">Privacy Policy</p>
+                      <p className="text-muted text-xs mt-0.5">How your data is handled locally</p>
+                    </div>
+                    <Icons.ChevronRight size={16} className="text-muted group-hover:text-accent transition-colors" />
+                  </div>
+                  <div className="p-5 flex items-center justify-between group cursor-pointer hover:bg-hover/80 transition-colors" onClick={() => setLegalDoc('data')}>
+                    <div>
+                      <p className="text-primary text-sm font-medium">Data Compliance</p>
+                      <p className="text-muted text-xs mt-0.5">Information on GDPR, CCPA, and data sovereignty</p>
+                    </div>
+                    <Icons.ChevronRight size={16} className="text-muted group-hover:text-accent transition-colors" />
+                  </div>
+                </div>
+              </section>
+
               {/* About */}
               <section>
                 <h3 className="text-xs text-muted uppercase tracking-widest font-semibold mb-4">About</h3>
@@ -1676,6 +1706,10 @@ export default function DashboardClient() {
             </div>
           </div>
         </div>
+      )}
+
+      {legalDoc && (
+        <LegalModal docType={legalDoc} onClose={() => setLegalDoc(null)} />
       )}
       </div>
     </div>
