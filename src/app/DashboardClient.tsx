@@ -487,7 +487,7 @@ ${JSON.stringify(diag, null, 2)}
       const body = encodeURIComponent(bodyText);
       
       // Open the user's default email client
-      window.location.href = `mailto:hello@formadigital.in?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:golecha.aadi30@gmail.com?subject=${subject}&body=${body}`;
       
       // Close modal and reset
       setFeedbackText('');
