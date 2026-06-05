@@ -44,7 +44,9 @@ contextBridge.exposeInMainWorld('electron', {
   addClientLog: (clientId, log) => ipcRenderer.invoke('add-client-log', clientId, log),
 
   // Today Focus
-  setTodayFocus: (text) => ipcRenderer.invoke('set-today-focus', text),
+  setTodayFocus: (text) => ipcRenderer.invoke('set-today-focus', text), // deprecated
+  setTodayFocuses: (focuses) => ipcRenderer.invoke('set-today-focuses', focuses),
+  setMainFocus: (id) => ipcRenderer.invoke('set-main-focus', id),
 
   // Invoices
   createInvoice: (fields) => ipcRenderer.invoke('create-invoice', fields),

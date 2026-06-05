@@ -116,6 +116,11 @@ export type Activity = {
   details?: string;
 };
 
+export interface FocusItem {
+  id: string;
+  text: string;
+}
+
 export type DBData = {
   baseDirectory: string;
   projects: Project[];
@@ -125,6 +130,8 @@ export type DBData = {
   clients: Client[];
   templates: ChecklistTemplate[];
   invoices: Invoice[];
-  todayFocus: string;
+  todayFocus?: string; // deprecated
+  todayFocuses: FocusItem[];
+  mainFocusId: string | null;
   activityLog: Activity[];
 };

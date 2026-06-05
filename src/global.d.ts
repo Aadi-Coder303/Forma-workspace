@@ -50,6 +50,8 @@ declare global {
       
       // Today
       setTodayFocus: (text: string) => Promise<void>;
+      setTodayFocuses: (focuses: import('./lib/types').FocusItem[]) => Promise<void>;
+      setMainFocus: (id: string | null) => Promise<void>;
 
       // Invoices
       createInvoice: (fields: Omit<Invoice, 'id'>) => Promise<boolean>;

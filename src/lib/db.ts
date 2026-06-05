@@ -36,6 +36,8 @@ export async function getDb(): Promise<DBData> {
       templates: [],
       invoices: [],
       todayFocus: '',
+      todayFocuses: [],
+      mainFocusId: null,
       activityLog: [],
     };
     await saveDb(defaultData);

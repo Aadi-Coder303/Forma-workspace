@@ -267,11 +267,22 @@ async function getDb() {
       db.templates = DEFAULT_TEMPLATES;
       dirty = true;
     }
+    
+    // Migrate todayFocus string to todayFocuses array
+    if (db.todayFocus && (!db.todayFocuses || db.todayFocuses.length === 0)) {
+      db.todayFocuses = [{ id: Date.now().toString(), text: db.todayFocus }];
+      db.mainFocusId = db.todayFocuses[0].id;
+      db.todayFocus = '';
+      dirty = true;
+    }
+    
+    if (!db.todayFocuses) { db.todayFocuses = []; dirty = true; }
+    if (db.mainFocusId === undefined) { db.mainFocusId = null; dirty = true; }
 
     if (dirty) await saveDb(db);
     return db;
   } catch (error) {
-    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], teamTasks: [], clients: [], templates: DEFAULT_TEMPLATES, invoices: [], activityLog: [], todayFocus: '' };
+    const defaultData = { baseDirectory: '', projects: [], notes: [], team: [], teamTasks: [], clients: [], templates: DEFAULT_TEMPLATES, invoices: [], activityLog: [], todayFocus: '', todayFocuses: [], mainFocusId: null };
     await saveDb(defaultData);
     return defaultData;
   }
@@ -961,11 +972,25 @@ ipcMain.handle('get-app-version', () => app.getVersion());
   });
 
   // Today Focus
-  ipcMain.handle('set-today-focus', async (_, text) => {
+  ipcMain.handle('set-today-focus', async (event, text) => {
     const db = await getDb();
     db.todayFocus = text;
     await saveDb(db);
-    return true;
+    return db;
+  });
+
+  ipcMain.handle('set-today-focuses', async (event, focuses) => {
+    const db = await getDb();
+    db.todayFocuses = focuses;
+    await saveDb(db);
+    return db;
+  });
+
+  ipcMain.handle('set-main-focus', async (event, id) => {
+    const db = await getDb();
+    db.mainFocusId = id;
+    await saveDb(db);
+    return db;
   });
 
   // Invoices

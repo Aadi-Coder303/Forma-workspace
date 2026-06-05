@@ -74,7 +74,7 @@ export default function DashboardClient() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Today state
-  const [todayFocus, setTodayFocus] = useState('');
+  const [newFocusInput, setNewFocusInput] = useState('');
   const [focusSaved, setFocusSaved] = useState(false);
   const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | 'data' | null>(null);
 
@@ -94,7 +94,6 @@ export default function DashboardClient() {
         const data = await window.electron.getDb();
         setDb(data);
         setDirInput(data.baseDirectory);
-        setTodayFocus(data.todayFocus || '');
       } catch (err: any) {
         setError(err.message);
       }
@@ -416,17 +415,41 @@ export default function DashboardClient() {
   };
 
   // ─── Today ─────────────────────────────────────────────────────────────────
-  const handleSaveFocus = async () => {
-    if (!window.electron) return;
-    await window.electron.setTodayFocus(todayFocus);
+  const handleAddFocus = async () => {
+    if (!window.electron || !safeDb || !newFocusInput.trim()) return;
+    const newItem = { id: Date.now().toString(), text: newFocusInput.trim() };
+    const updated = [...safeDb.todayFocuses, newItem];
+    await window.electron.setTodayFocuses(updated);
+    if (!safeDb.mainFocusId) {
+      await window.electron.setMainFocus(newItem.id);
+    }
+    setNewFocusInput('');
     setFocusSaved(true);
     setTimeout(() => setFocusSaved(false), 2000);
+    await loadDb();
+  };
+
+  const handleDeleteFocus = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.electron || !safeDb) return;
+    const updated = safeDb.todayFocuses.filter(f => f.id !== id);
+    await window.electron.setTodayFocuses(updated);
+    if (safeDb.mainFocusId === id) {
+      await window.electron.setMainFocus(updated.length > 0 ? updated[0].id : null);
+    }
+    await loadDb();
+  };
+
+  const handleSetMainFocus = async (id: string) => {
+    if (!window.electron || !safeDb) return;
+    await window.electron.setMainFocus(id);
+    await loadDb();
   };
 
   // ─── Render guards ─────────────────────────────────────────────────────────
-  // Normalise: old projects.json may not have notes / team / todayFocus
+  // Normalise: old projects.json may not have notes / team / todayFocuses
   const safeDb = db
-    ? { ...db, notes: db.notes ?? [], team: db.team ?? [], teamTasks: (db as any).teamTasks ?? [], todayFocus: db.todayFocus ?? '' }
+    ? { ...db, notes: db.notes ?? [], team: db.team ?? [], teamTasks: (db as any).teamTasks ?? [], todayFocuses: db.todayFocuses ?? [], mainFocusId: db.mainFocusId ?? null }
     : null;
 
   if (!safeDb) {
@@ -603,13 +626,15 @@ export default function DashboardClient() {
               </div>
 
               {/* Today's Focus */}
-              {safeDb.todayFocus && (
+              {safeDb.todayFocuses.length > 0 && safeDb.mainFocusId && (
                 <div className="bg-hover border border-accent/20 rounded-2xl p-6 shadow-sm flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3">
                     <Icons.Today size={16} className="text-accent" />
                     <h3 className="text-accent text-sm font-medium uppercase tracking-wider">Today's Focus</h3>
                   </div>
-                  <p className="text-primary font-display text-2xl leading-snug whitespace-pre-wrap">{safeDb.todayFocus}</p>
+                  <p className="text-primary font-display text-2xl leading-snug whitespace-pre-wrap">
+                    {safeDb.todayFocuses.find(f => f.id === safeDb.mainFocusId)?.text || safeDb.todayFocuses[0].text}
+                  </p>
                 </div>
               )}
 
@@ -758,21 +783,74 @@ export default function DashboardClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-primary font-medium mb-3">Today's Focus</h3>
-                  <div className="relative">
-                    <textarea
-                      value={todayFocus}
-                      onChange={e => setTodayFocus(e.target.value)}
-                      placeholder="What is the one thing you need to accomplish today?"
-                      className="w-full bg-hover border border-border rounded-xl p-6 text-xl lg:text-2xl font-display text-primary outline-none focus:border-accent transition-colors resize-none h-40 leading-relaxed"
-                    />
-                    <div className="absolute bottom-4 right-4 flex items-center gap-3">
-                      {focusSaved && <span className="text-xs text-accent animate-fade-in">Saved</span>}
-                      <button
-                        onClick={handleSaveFocus}
-                        className="bg-accent text-canvas px-3 py-1 rounded text-[10px] uppercase tracking-wider font-bold hover:bg-[#a65123] transition-colors cursor-pointer"
-                      >
-                        Commit
-                      </button>
+                  <div className="flex flex-col gap-3">
+                    {/* Render the focus items */}
+                    {safeDb.todayFocuses.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        {/* Render Main Focus */}
+                        {safeDb.todayFocuses.map((focus) => {
+                          const isMain = focus.id === (safeDb.mainFocusId || safeDb.todayFocuses[0].id);
+                          if (!isMain) return null;
+                          return (
+                            <div key={focus.id} className="relative group bg-hover border border-accent/40 shadow-sm rounded-xl p-6 transition-all">
+                              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={(e) => handleDeleteFocus(focus.id, e)} className="text-muted hover:text-red-400 p-1 bg-card rounded-md border border-border">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/></svg>
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Icons.Today size={14} className="text-accent" />
+                                <span className="text-xs uppercase tracking-wider text-accent font-bold">Main Focus</span>
+                              </div>
+                              <p className="text-primary font-display text-2xl leading-snug whitespace-pre-wrap pr-8">{focus.text}</p>
+                            </div>
+                          );
+                        })}
+
+                        {/* Render Other Focuses (Pills) */}
+                        {safeDb.todayFocuses.map((focus) => {
+                          const isMain = focus.id === (safeDb.mainFocusId || safeDb.todayFocuses[0].id);
+                          if (isMain) return null;
+                          return (
+                            <div 
+                              key={focus.id} 
+                              onClick={() => handleSetMainFocus(focus.id)}
+                              className="group bg-hover/50 hover:bg-hover border border-border rounded-lg p-3 pr-4 flex items-center justify-between cursor-pointer transition-all"
+                            >
+                              <p className="text-muted group-hover:text-primary text-sm line-clamp-2 pr-4">{focus.text}</p>
+                              <button onClick={(e) => handleDeleteFocus(focus.id, e)} className="text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/></svg>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Add New Focus Input */}
+                    <div className="relative mt-2">
+                      <input
+                        value={newFocusInput}
+                        onChange={e => setNewFocusInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddFocus();
+                          }
+                        }}
+                        placeholder={safeDb.todayFocuses.length === 0 ? "What's your main focus today?" : "Add another focus..."}
+                        className={`w-full bg-hover border border-border rounded-lg pl-4 pr-20 py-3 text-sm text-primary outline-none focus:border-accent transition-colors ${safeDb.todayFocuses.length === 0 ? 'h-16 text-lg font-display' : ''}`}
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        {focusSaved && <span className="text-[10px] text-accent animate-fade-in uppercase font-bold tracking-wider">Added</span>}
+                        <button
+                          onClick={handleAddFocus}
+                          className="bg-accent text-canvas w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-50"
+                          disabled={!newFocusInput.trim()}
+                        >
+                          <Icons.Plus size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
