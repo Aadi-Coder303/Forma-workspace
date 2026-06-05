@@ -134,4 +134,7 @@ export type DBData = {
   todayFocuses: FocusItem[];
   mainFocusId: string | null;
   activityLog: Activity[];
+  lastNotificationDate?: string | null;
+  resendApiKey?: string;
+  resendFromEmail?: string;
 };

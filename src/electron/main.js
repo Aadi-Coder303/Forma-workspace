@@ -4,6 +4,7 @@ const url = require('url');
 const fs = require('fs/promises');
 const crypto = require('crypto');
 const { autoUpdater } = require('electron-updater');
+const { Resend } = require('resend');
 
 let mainWindow;
 
@@ -898,6 +899,17 @@ ipcMain.handle('get-app-version', () => app.getVersion());
     return tmpl;
   });
 
+  ipcMain.handle('update-template', async (_, templateId, templateData) => {
+    const db = await getDb();
+    const idx = db.templates.findIndex(t => t.id === templateId);
+    if (idx !== -1) {
+      db.templates[idx] = { ...db.templates[idx], ...templateData };
+      await saveDb(db);
+      return true;
+    }
+    return false;
+  });
+
   ipcMain.handle('delete-template', async (_, templateId) => {
     const db = await getDb();
     db.templates = db.templates.filter(t => t.id !== templateId);
@@ -1105,6 +1117,49 @@ ipcMain.handle('get-app-version', () => app.getVersion());
     db.invoices = db.invoices.filter(i => i.id !== invoiceId);
     await saveDb(db);
     return true;
+  });
+
+  // Email Integration & Diagnostics
+  ipcMain.handle('update-email-settings', async (event, apiKey, fromEmail) => {
+    const db = await getDb();
+    db.resendApiKey = apiKey;
+    db.resendFromEmail = fromEmail;
+    await saveDb(db);
+    return true;
+  });
+
+  ipcMain.handle('send-email', async (event, to, subject, html) => {
+    const db = await getDb();
+    if (!db.resendApiKey || !db.resendFromEmail) {
+      return { success: false, error: 'Resend API Key or From Email not configured in Settings.' };
+    }
+
+    try {
+      const resend = new Resend(db.resendApiKey);
+      const { data, error } = await resend.emails.send({
+        from: db.resendFromEmail,
+        to: to,
+        subject: subject,
+        html: html
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('get-app-diagnostics', async () => {
+    const os = require('os');
+    return {
+      version: app.getVersion(),
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch()
+    };
   });
 
 

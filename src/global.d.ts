@@ -28,6 +28,7 @@ declare global {
 
       // Templates
       createTemplate: (templateData: any) => Promise<Template>;
+      updateTemplate: (templateId: string, templateData: any) => Promise<boolean>;
       deleteTemplate: (templateId: string) => Promise<boolean>;
       
       // Notes
@@ -57,6 +58,11 @@ declare global {
       createInvoice: (fields: Omit<Invoice, 'id'>) => Promise<boolean>;
       updateInvoice: (invoiceId: string, fields: Partial<Invoice>) => Promise<boolean>;
       deleteInvoice: (id: string) => Promise<boolean>;
+
+      // Email Integration & Diagnostics
+      updateEmailSettings: (apiKey: string, fromEmail: string) => Promise<boolean>;
+      sendEmail: (to: string, subject: string, html: string) => Promise<{ success: boolean; error?: string }>;
+      getAppDiagnostics: () => Promise<any>;
 
       // Updater
       updater: {

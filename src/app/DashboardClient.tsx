@@ -64,6 +64,13 @@ export default function DashboardClient() {
   const [teamTaskFilter, setTeamTaskFilter] = useState<'all' | 'active' | 'done'>('active');
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', priority: 'normal' as 'low' | 'normal' | 'urgent', dueDate: '', note: '', projectId: '' });
+  const [sendTaskEmail, setSendTaskEmail] = useState(false);
+
+  // Email & Feedback state
+  const [emailSettings, setEmailSettings] = useState({ apiKey: '', fromEmail: '' });
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
 
   // Sidebar state
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -82,6 +89,11 @@ export default function DashboardClient() {
   const [showArchived, setShowArchived] = useState(false);
   const [hasSynced, setHasSynced] = useState(false);
 
+  // Template state
+  const [showNewTemplateModal, setShowNewTemplateModal] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [editingTemplate, setEditingTemplate] = useState<import('./lib/types').Template | null>(null);
+
   // Updater state
   const [appVersion, setAppVersion] = useState('');
   const [updaterStatus, setUpdaterStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'>('idle');
@@ -94,6 +106,7 @@ export default function DashboardClient() {
         const data = await window.electron.getDb();
         setDb(data);
         setDirInput(data.baseDirectory);
+        setEmailSettings({ apiKey: data.resendApiKey || '', fromEmail: data.resendFromEmail || '' });
       } catch (err: any) {
         setError(err.message);
       }
@@ -291,20 +304,34 @@ export default function DashboardClient() {
     alert("Export Project feature is a stub! Ready to serialize to JSON.");
   };
 
-  const handleCreateTemplate = async () => {
-    if (!window.electron) return;
-    const name = prompt('Template Name (e.g. Web App Starter):');
-    if (!name) return;
-    
-    // Example default phases
+  const handleCreateTemplateSubmit = async () => {
+    if (!window.electron || !newTemplateName.trim()) return;
     const defaultPhases = [
-      { name: 'Discovery', items: [{ title: 'Kickoff Call', subtasks: [] }] },
-      { name: 'Design', items: [{ title: 'Wireframes', subtasks: [] }] },
-      { name: 'Development', items: [{ title: 'Setup Repo', subtasks: [] }] }
+      { id: Date.now().toString(), name: 'Discovery', items: [{ id: Date.now().toString() + '1', title: 'Kickoff Call', isCompleted: false }] },
+      { id: (Date.now() + 1).toString(), name: 'Design', items: [{ id: (Date.now() + 1).toString() + '1', title: 'Wireframes', isCompleted: false }] }
     ];
-    
-    await window.electron.createTemplate({ name, phases: defaultPhases });
+    await window.electron.createTemplate({ name: newTemplateName.trim(), phases: defaultPhases });
+    setNewTemplateName('');
+    setShowNewTemplateModal(false);
     await loadDb();
+  };
+
+  const handleSaveEditedTemplate = async () => {
+    if (!window.electron || !editingTemplate) return;
+    await window.electron.updateTemplate(editingTemplate.id, {
+      name: editingTemplate.name,
+      phases: editingTemplate.phases
+    });
+    setEditingTemplate(null);
+    await loadDb();
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (!window.electron) return;
+    if (confirm('Are you sure you want to delete this template?')) {
+      await window.electron.deleteTemplate(id);
+      await loadDb();
+    }
   };
 
   const handleArchive = async (id: string) => {
@@ -397,9 +424,73 @@ export default function DashboardClient() {
       note: newTask.note || undefined,
       projectId: newTask.projectId || undefined,
     });
+    
+    if (sendTaskEmail) {
+      if (!emailSettings.apiKey || !emailSettings.fromEmail) {
+        alert("Cannot send email: Please configure Resend API Key in Settings first.");
+      } else {
+        const projName = newTask.projectId ? safeDb?.projects.find(p => p.id === newTask.projectId)?.name || 'N/A' : 'N/A';
+        const html = `
+          <div style="font-family: sans-serif; padding: 20px;">
+            <h2>New Task Assigned: ${newTask.title.trim()}</h2>
+            <p><strong>Priority:</strong> ${newTask.priority}</p>
+            <p><strong>Due Date:</strong> ${newTask.dueDate || 'No due date'}</p>
+            <p><strong>Project:</strong> ${projName}</p>
+            ${newTask.note ? `<p><strong>Notes:</strong> ${newTask.note}</p>` : ''}
+            <p style="margin-top: 20px; font-size: 12px; color: #666;">Sent from Forma Workspace</p>
+          </div>
+        `;
+        const res = await window.electron.sendEmail(selectedMember.email, `New Task: ${newTask.title.trim()}`, html);
+        if (!res.success) {
+          alert("Failed to send email to " + selectedMember.email + ": " + res.error);
+        }
+      }
+    }
+
     setNewTask({ title: '', priority: 'normal', dueDate: '', note: '', projectId: '' });
+    setSendTaskEmail(false);
     setShowAddTask(false);
     await loadDb();
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!window.electron || !feedbackText.trim()) return;
+    setFeedbackSending(true);
+    
+    if (!emailSettings.apiKey || !emailSettings.fromEmail) {
+      alert("Please configure your Resend API Key in Settings first to send feedback.");
+      setFeedbackSending(false);
+      return;
+    }
+
+    try {
+      const diag = await window.electron.getAppDiagnostics();
+      const html = `
+        <div style="font-family: sans-serif;">
+          <h2>User Feedback Report</h2>
+          <p><strong>Message:</strong></p>
+          <blockquote style="border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0;">
+            ${feedbackText.trim().replace(/\\n/g, '<br/>')}
+          </blockquote>
+          <hr/>
+          <p><strong>Diagnostics:</strong></p>
+          <pre style="background: #f4f4f4; padding: 10px; border-radius: 5px; font-size: 12px;">${JSON.stringify(diag, null, 2)}</pre>
+        </div>
+      `;
+      
+      const res = await window.electron.sendEmail('hello@formadigital.in', 'Forma Workspace - In-App Feedback', html);
+      if (res.success) {
+        alert("Feedback sent successfully! Thank you.");
+        setFeedbackText('');
+        setShowFeedbackModal(false);
+      } else {
+        alert("Failed to send feedback: " + res.error);
+      }
+    } catch (err: any) {
+      alert("An error occurred: " + err.message);
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   const handleToggleTask = async (taskId: string, current: boolean) => {
@@ -558,8 +649,8 @@ export default function DashboardClient() {
               {isSidebarExpanded && <span className="text-sm font-medium">Settings</span>}
             </button>
             <button
-              onClick={() => alert("The support ticketing portal is coming in a future update!")}
-              title="Report a Bug (Coming Soon)"
+              onClick={() => setShowFeedbackModal(true)}
+              title="Report a Bug / Feedback"
               className={`p-3 rounded-xl text-muted hover:text-accent hover:bg-hover transition-all duration-200 cursor-pointer flex items-center gap-3 ${isSidebarExpanded ? 'justify-start' : 'justify-center'}`}
             >
               <Icons.Bug size={20} className="shrink-0" />
@@ -1219,6 +1310,18 @@ export default function DashboardClient() {
                           value={newTask.note}
                           onChange={e => setNewTask(t => ({ ...t, note: e.target.value }))}
                         />
+                        <div className="col-span-full flex items-center gap-2 mt-1 mb-2">
+                          <input 
+                            type="checkbox" 
+                            id="sendTaskEmail"
+                            checked={sendTaskEmail}
+                            onChange={e => setSendTaskEmail(e.target.checked)}
+                            className="accent-accent cursor-pointer"
+                          />
+                          <label htmlFor="sendTaskEmail" className="text-xs text-muted cursor-pointer hover:text-primary transition-colors">
+                            Send email notification to assignee
+                          </label>
+                        </div>
                       </div>
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => setShowAddTask(false)} className="text-muted text-sm hover:text-primary cursor-pointer px-4 py-2">Cancel</button>
@@ -1442,6 +1545,42 @@ export default function DashboardClient() {
                 </div>
               </section>
 
+              {/* Email Integration */}
+              <section className="mb-10">
+                <h3 className="text-xs text-muted uppercase tracking-widest font-semibold mb-4">Email Integration (Resend)</h3>
+                <div className="bg-hover border border-border rounded-2xl divide-y divide-[rgba(244,242,238,0.06)]">
+                  <div className="p-5">
+                    <label className="block text-primary text-sm font-medium mb-2">Resend API Key</label>
+                    <input
+                      type="password"
+                      className="w-full bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors font-mono mb-4"
+                      value={emailSettings.apiKey}
+                      onChange={e => setEmailSettings({ ...emailSettings, apiKey: e.target.value })}
+                      placeholder="re_..."
+                    />
+                    <label className="block text-primary text-sm font-medium mb-2">From Email</label>
+                    <input
+                      className="w-full bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors font-mono mb-4"
+                      value={emailSettings.fromEmail}
+                      onChange={e => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })}
+                      placeholder="notifications@yourdomain.com"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (window.electron) {
+                          await window.electron.updateEmailSettings(emailSettings.apiKey, emailSettings.fromEmail);
+                          alert("Email settings saved!");
+                          await loadDb();
+                        }
+                      }}
+                      className="bg-accent text-canvas border border-border rounded-lg px-5 py-2 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                    >
+                      Save Email Settings
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               {/* Application & Updates */}
               <section className="mb-10">
                 <h3 className="text-xs text-muted uppercase tracking-widest font-semibold mb-4">Application</h3>
@@ -1629,8 +1768,8 @@ export default function DashboardClient() {
                   <div className="p-5 border-b border-border flex justify-between items-center">
                     <h3 className="text-primary font-medium">Checklist Templates</h3>
                     <button
-                      onClick={handleCreateTemplate}
-                      className="text-xs bg-card text-primary px-3 py-1.5 rounded-lg font-medium"
+                      onClick={() => setShowNewTemplateModal(true)}
+                      className="text-xs bg-card text-primary px-3 py-1.5 rounded-lg font-medium cursor-pointer hover:bg-border transition-colors"
                     >
                       + New Template
                     </button>
@@ -1641,8 +1780,24 @@ export default function DashboardClient() {
                     ) : (
                       safeDb.templates?.map(t => (
                         <div key={t.id} className="flex justify-between items-center text-sm border border-border rounded-lg p-3">
-                          <span className="text-primary">{t.name}</span>
-                          <span className="text-muted text-xs">{t.phases.length} phases</span>
+                          <div>
+                            <span className="text-primary font-medium block">{t.name}</span>
+                            <span className="text-muted text-xs">{t.phases.length} phases</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingTemplate(JSON.parse(JSON.stringify(t)))}
+                              className="px-3 py-1 text-xs bg-hover text-primary rounded border border-border hover:border-accent transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTemplate(t.id)}
+                              className="px-3 py-1 text-xs bg-hover text-red-400 rounded border border-border hover:border-red-400/50 transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
@@ -1789,6 +1944,202 @@ export default function DashboardClient() {
       {legalDoc && (
         <LegalModal docType={legalDoc} onClose={() => setLegalDoc(null)} />
       )}
+        {/* Feedback Modal */}
+        {showFeedbackModal && (
+          <div className="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+            <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Icons.Bug size={18} className="text-accent" />
+                  <h2 className="font-display font-medium text-primary">Report a Bug / Feedback</h2>
+                </div>
+                <button onClick={() => setShowFeedbackModal(false)} className="text-muted hover:text-primary transition-colors cursor-pointer p-1">
+                  <Icons.Close size={16} />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-muted mb-4">
+                  Found a bug or have a feature request? Let us know! Your app version and basic OS diagnostics will be automatically included.
+                </p>
+                <textarea
+                  className="w-full bg-hover border border-border rounded-lg px-4 py-3 text-sm text-primary outline-none focus:border-accent transition-colors resize-none h-32 mb-2"
+                  placeholder="Describe the issue or feedback..."
+                  value={feedbackText}
+                  onChange={e => setFeedbackText(e.target.value)}
+                  disabled={feedbackSending}
+                />
+                {!emailSettings.apiKey && (
+                  <p className="text-xs text-amber-400 mb-2">⚠️ You need to configure your Resend API Key in Settings first.</p>
+                )}
+              </div>
+              <div className="px-6 py-4 bg-hover border-t border-border flex justify-end gap-3">
+                <button
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="px-4 py-2 text-sm text-muted hover:text-primary transition-colors cursor-pointer"
+                  disabled={feedbackSending}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFeedbackSubmit}
+                  disabled={feedbackSending || !feedbackText.trim()}
+                  className="px-5 py-2 text-sm font-medium bg-accent text-canvas rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {feedbackSending ? 'Sending...' : 'Send Feedback'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* New Template Modal */}
+      {showNewTemplateModal && (
+        <div className="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h2 className="font-display font-medium text-primary">New Template</h2>
+              <button onClick={() => setShowNewTemplateModal(false)} className="text-muted hover:text-primary transition-colors cursor-pointer">
+                <Icons.Close size={16} />
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="block text-xs font-medium text-muted uppercase tracking-wider mb-2">Template Name</label>
+              <input
+                className="w-full bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
+                placeholder="e.g. Web App Starter"
+                value={newTemplateName}
+                onChange={e => setNewTemplateName(e.target.value)}
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleCreateTemplateSubmit();
+                  if (e.key === 'Escape') setShowNewTemplateModal(false);
+                }}
+              />
+            </div>
+            <div className="px-6 py-4 bg-hover border-t border-border flex justify-end gap-3">
+              <button onClick={() => setShowNewTemplateModal(false)} className="px-4 py-2 text-sm text-muted hover:text-primary cursor-pointer">Cancel</button>
+              <button
+                onClick={handleCreateTemplateSubmit}
+                disabled={!newTemplateName.trim()}
+                className="px-5 py-2 text-sm font-medium bg-accent text-canvas rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Template Editor Modal */}
+      {editingTemplate && (
+        <div className="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+              <div className="flex-1">
+                <input
+                  className="bg-transparent text-xl font-display font-medium text-primary outline-none border-b border-transparent focus:border-border w-full transition-colors"
+                  value={editingTemplate.name}
+                  onChange={e => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                  placeholder="Template Name"
+                />
+              </div>
+              <button onClick={() => setEditingTemplate(null)} className="text-muted hover:text-primary transition-colors cursor-pointer p-2">
+                <Icons.Close size={16} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-hover">
+              <div className="space-y-6">
+                {editingTemplate.phases.map((phase, pIdx) => (
+                  <div key={phase.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border bg-[rgba(244,242,238,0.02)] flex items-center gap-3">
+                      <div className="cursor-move text-muted/50"><Icons.Menu size={14} /></div>
+                      <input
+                        className="flex-1 bg-transparent text-sm font-medium text-primary outline-none"
+                        value={phase.name}
+                        onChange={e => {
+                          const newPhases = [...editingTemplate.phases];
+                          newPhases[pIdx].name = e.target.value;
+                          setEditingTemplate({ ...editingTemplate, phases: newPhases });
+                        }}
+                        placeholder="Phase Name"
+                      />
+                      <button
+                        onClick={() => {
+                          const newPhases = editingTemplate.phases.filter((_, i) => i !== pIdx);
+                          setEditingTemplate({ ...editingTemplate, phases: newPhases });
+                        }}
+                        className="text-muted hover:text-red-400 p-1 cursor-pointer transition-colors"
+                      >
+                        <Icons.Close size={14} />
+                      </button>
+                    </div>
+                    <div className="p-3">
+                      {phase.items.map((item, iIdx) => (
+                        <div key={item.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-hover rounded group">
+                          <div className="cursor-move text-muted/30 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Menu size={12} /></div>
+                          <div className="w-4 h-4 rounded border-2 border-border flex items-center justify-center shrink-0"></div>
+                          <input
+                            className="flex-1 bg-transparent text-sm text-primary outline-none focus:border-b focus:border-border"
+                            value={item.title}
+                            onChange={e => {
+                              const newPhases = [...editingTemplate.phases];
+                              newPhases[pIdx].items[iIdx].title = e.target.value;
+                              setEditingTemplate({ ...editingTemplate, phases: newPhases });
+                            }}
+                            placeholder="Task title"
+                          />
+                          <button
+                            onClick={() => {
+                              const newPhases = [...editingTemplate.phases];
+                              newPhases[pIdx].items = newPhases[pIdx].items.filter((_, i) => i !== iIdx);
+                              setEditingTemplate({ ...editingTemplate, phases: newPhases });
+                            }}
+                            className="text-muted hover:text-red-400 p-1 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                          >
+                            <Icons.Close size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const newPhases = [...editingTemplate.phases];
+                          newPhases[pIdx].items.push({ id: crypto.randomUUID(), title: '', isCompleted: false });
+                          setEditingTemplate({ ...editingTemplate, phases: newPhases });
+                        }}
+                        className="mt-2 text-xs text-muted hover:text-primary flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
+                      >
+                        <Icons.Plus size={12} /> Add Task
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  onClick={() => {
+                    setEditingTemplate({
+                      ...editingTemplate,
+                      phases: [...editingTemplate.phases, { id: crypto.randomUUID(), name: 'New Phase', items: [] }]
+                    });
+                  }}
+                  className="w-full py-4 border-2 border-dashed border-border rounded-xl text-sm text-muted hover:text-primary hover:border-accent/40 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Icons.Plus size={16} /> Add Phase
+                </button>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-card flex justify-end gap-3 shrink-0">
+              <button onClick={() => setEditingTemplate(null)} className="px-4 py-2 text-sm text-muted hover:text-primary cursor-pointer transition-colors">Cancel</button>
+              <button
+                onClick={handleSaveEditedTemplate}
+                className="px-6 py-2 text-sm font-medium bg-accent text-canvas rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer"
+              >
+                Save Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );

@@ -126,6 +126,10 @@ export default function ProjectClient() {
   // Custom prompt state for adding time
   const [timePrompt, setTimePrompt] = useState<{ phaseId: string, itemId: string } | null>(null);
   const [timeInput, setTimeInput] = useState('30');
+  
+  // Custom prompt state for saving template
+  const [templatePrompt, setTemplatePrompt] = useState<boolean>(false);
+  const [templateNameInput, setTemplateNameInput] = useState('');
 
   const loadProject = async () => {
     if (typeof window !== 'undefined' && window.electron && projectId) {
@@ -284,13 +288,17 @@ export default function ProjectClient() {
   const totalPaid = projectInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const balance = totalInvoiced - totalPaid;
 
-  const handleSaveAsTemplate = async () => {
-    if (typeof window !== 'undefined' && window.electron && project) {
-      const templateName = prompt('Enter a name for this template:', `${project.name} Template`);
-      if (!templateName) return;
+  const handleSaveAsTemplate = () => {
+    if (project) {
+      setTemplateNameInput(`${project.name} Template`);
+      setTemplatePrompt(true);
+    }
+  };
 
+  const submitSaveAsTemplate = async () => {
+    if (typeof window !== 'undefined' && window.electron && project && templateNameInput.trim()) {
       const templateData = {
-        name: templateName,
+        name: templateNameInput.trim(),
         phases: project.phases.map(ph => ({
           name: ph.name,
           items: ph.checklist.map(item => ({
@@ -303,6 +311,7 @@ export default function ProjectClient() {
       try {
         await window.electron.createTemplate(templateData);
         alert('Template saved successfully!');
+        setTemplatePrompt(false);
       } catch (err: any) {
         alert('Failed to save template: ' + err.message);
       }
@@ -484,6 +493,46 @@ export default function ProjectClient() {
           </div>
         </div>
       )}
+
+      {/* Save Template Modal */}
+      {templatePrompt && (
+        <div className="fixed inset-0 bg-canvas/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-border">
+              <h3 className="font-display font-medium text-primary mb-2">Save as Template</h3>
+              <p className="text-xs text-muted">Enter a name for this new template:</p>
+            </div>
+            <div className="p-5">
+              <input 
+                autoFocus
+                type="text"
+                className="w-full bg-hover border border-border rounded-lg px-4 py-2.5 text-sm text-primary outline-none focus:border-accent transition-colors"
+                value={templateNameInput}
+                onChange={e => setTemplateNameInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') submitSaveAsTemplate();
+                  if (e.key === 'Escape') setTemplatePrompt(false);
+                }}
+              />
+            </div>
+            <div className="px-5 py-3 bg-hover border-t border-border flex justify-end gap-3">
+              <button 
+                onClick={() => setTemplatePrompt(false)}
+                className="px-4 py-1.5 text-sm text-muted hover:text-primary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitSaveAsTemplate}
+                className="px-4 py-1.5 text-sm font-medium bg-accent text-canvas rounded-lg hover:bg-[#a65123] transition-colors cursor-pointer"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Templates
   createTemplate: (templateData) => ipcRenderer.invoke('create-template', templateData),
+  updateTemplate: (templateId, templateData) => ipcRenderer.invoke('update-template', templateId, templateData),
   deleteTemplate: (templateId) => ipcRenderer.invoke('delete-template', templateId),
 
   // Notes
@@ -52,6 +53,11 @@ contextBridge.exposeInMainWorld('electron', {
   createInvoice: (fields) => ipcRenderer.invoke('create-invoice', fields),
   updateInvoice: (invoiceId, fields) => ipcRenderer.invoke('update-invoice', invoiceId, fields),
   deleteInvoice: (id) => ipcRenderer.invoke('delete-invoice', id),
+
+  // Email Integration & Diagnostics
+  updateEmailSettings: (apiKey, fromEmail) => ipcRenderer.invoke('update-email-settings', apiKey, fromEmail),
+  sendEmail: (to, subject, html) => ipcRenderer.invoke('send-email', to, subject, html),
+  getAppDiagnostics: () => ipcRenderer.invoke('get-app-diagnostics'),
 
   // Auto Updater
   updater: {

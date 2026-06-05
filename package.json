@@ -1,6 +1,6 @@
 {
   "name": "forma-workspace",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "private": true,
   "main": "src/electron/main.js",
   "scripts": {
@@ -36,17 +36,13 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.8.3"
+    "electron-updater": "^6.8.3",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "lucide-react": "^1.17.0",
-    "next": "16.2.6",
-    "next-themes": "^0.4.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -57,6 +53,11 @@
     "electron-builder": "^26.8.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.6",
+    "next-themes": "^0.4.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^9.0.10"
