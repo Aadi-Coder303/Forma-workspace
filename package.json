@@ -1,6 +1,6 @@
 {
   "name": "forma-workspace",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "private": true,
   "main": "src/electron/main.js",
   "scripts": {

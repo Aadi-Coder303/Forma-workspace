@@ -470,36 +470,28 @@ export default function DashboardClient() {
   const handleFeedbackSubmit = async () => {
     if (!window.electron || !feedbackText.trim()) return;
     setFeedbackSending(true);
-    
-    if (!emailSettings.apiKey || !emailSettings.fromEmail) {
-      alert("Please configure your Resend API Key in Settings first to send feedback.");
-      setFeedbackSending(false);
-      return;
-    }
 
     try {
       const diag = await window.electron.getAppDiagnostics();
-      const html = `
-        <div style="font-family: sans-serif;">
-          <h2>User Feedback Report</h2>
-          <p><strong>Message:</strong></p>
-          <blockquote style="border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0;">
-            ${feedbackText.trim().replace(/\\n/g, '<br/>')}
-          </blockquote>
-          <hr/>
-          <p><strong>Diagnostics:</strong></p>
-          <pre style="background: #f4f4f4; padding: 10px; border-radius: 5px; font-size: 12px;">${JSON.stringify(diag, null, 2)}</pre>
-        </div>
-      `;
+      const subject = encodeURIComponent('Forma Workspace - In-App Feedback');
       
-      const res = await window.electron.sendEmail('hello@formadigital.in', 'Forma Workspace - In-App Feedback', html);
-      if (res.success) {
-        alert("Feedback sent successfully! Thank you.");
-        setFeedbackText('');
-        setShowFeedbackModal(false);
-      } else {
-        alert("Failed to send feedback: " + res.error);
-      }
+      const bodyText = `
+Message:
+${feedbackText.trim()}
+
+---
+Diagnostics:
+${JSON.stringify(diag, null, 2)}
+      `.trim();
+      
+      const body = encodeURIComponent(bodyText);
+      
+      // Open the user's default email client
+      window.location.href = `mailto:hello@formadigital.in?subject=${subject}&body=${body}`;
+      
+      // Close modal and reset
+      setFeedbackText('');
+      setShowFeedbackModal(false);
     } catch (err: any) {
       alert("An error occurred: " + err.message);
     } finally {
