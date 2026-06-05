@@ -89,10 +89,24 @@ export default function DashboardClient() {
   const [showArchived, setShowArchived] = useState(false);
   const [hasSynced, setHasSynced] = useState(false);
 
+  interface EditingTemplate {
+    id: string;
+    name: string;
+    phases: {
+      id: string;
+      name: string;
+      items: {
+        id: string;
+        title: string;
+        isCompleted: boolean;
+      }[];
+    }[];
+  }
+
   // Template state
   const [showNewTemplateModal, setShowNewTemplateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
-  const [editingTemplate, setEditingTemplate] = useState<import('./lib/types').Template | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<EditingTemplate | null>(null);
 
   // Updater state
   const [appVersion, setAppVersion] = useState('');
@@ -2052,7 +2066,7 @@ export default function DashboardClient() {
                 {editingTemplate.phases.map((phase, pIdx) => (
                   <div key={phase.id} className="bg-card border border-border rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-border bg-[rgba(244,242,238,0.02)] flex items-center gap-3">
-                      <div className="cursor-move text-muted/50"><Icons.Menu size={14} /></div>
+                      <div className="cursor-move text-muted/50"><Icons.MoreVertical size={14} /></div>
                       <input
                         className="flex-1 bg-transparent text-sm font-medium text-primary outline-none"
                         value={phase.name}
@@ -2076,7 +2090,7 @@ export default function DashboardClient() {
                     <div className="p-3">
                       {phase.items.map((item, iIdx) => (
                         <div key={item.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-hover rounded group">
-                          <div className="cursor-move text-muted/30 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Menu size={12} /></div>
+                          <div className="cursor-move text-muted/30 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.MoreVertical size={12} /></div>
                           <div className="w-4 h-4 rounded border-2 border-border flex items-center justify-center shrink-0"></div>
                           <input
                             className="flex-1 bg-transparent text-sm text-primary outline-none focus:border-b focus:border-border"
